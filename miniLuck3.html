@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotto Game with Admin Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f0f0f0;
+    }
+    h2 {
+      margin-bottom: 0.5rem;
+    }
+    #email {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 250px;
+      margin-right: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .number {
+      padding: 10px;
+      background: #eee;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 5px;
+      user-select: none;
+    }
+    .number.taken {
+      background-color: #ff9999;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .number.mine {
+      background-color: #90ee90;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .number.disabled {
+      /* for game-closed, available numbers */
+      background-color: #ddd;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    #adminControls {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎯 Lotto Number Picker</h2>
+
+  <input type="email" id="email" placeholder="Enter your email" />
+  <button onclick="loadNumbers()">Enter Game</button>
+
+  <div id="status"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <button style="margin-top:1rem;" onclick="clearSelection()">Change Number</button>
+
+  <div id="adminControls">
+    <strong>Admin Controls:</strong><br/>
+    <button id="toggleGameBtn" onclick="toggleGame()">...</button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      getDoc,
+      setDoc,
+      doc,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+
+    // ← your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
+      authDomain: "lottogame-16083.firebaseapp.com",
+      projectId: "lottogame-16083",
+      storageBucket: "lottogame-16083.appspot.com",
+      messagingSenderId: "278778623701",
+      appId: "1:278778623701:web:c7828b036c617a13fa145c"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ← Whitelist + admin
+    const allowedEmails = [
+      "test@test.com",
+      "john@example.com",
+      "boss@company.com",
+      "alice@wonderland.com",
+      "bob@builder.com",
+      "admin@company.com"
+    ];
+    const adminEmails = ["admin@company.com"];
+
+    let currentEmail = "";
+    let myNumber = null;
+    let gameOpen = false;
+
+    // Load game status, picks, and render
+    async function loadNumbers() {
+      currentEmail = document.getElementById("email").value.trim().toLowerCase();
+      const status = document.getElementById("status");
+      const grid = document.getElementById("grid");
+
+      // email validation
+      if (!currentEmail) {
+        status.textContent = "❗ Please enter your email.";
+        grid.innerHTML = "";
+        hideAdmin();
+        return;
+      }
+      if (!allowedEmails.includes(currentEmail)) {
+        status.textContent = "⛔ Access denied. Your email is not allowed.";
+        grid.innerHTML = "";
+        hideAdmin();
+        return;
+      }
+
+      // fetch game status
+      const gameDoc = await getDoc(doc(db, "settings", "game"));
+      gameOpen = gameDoc.exists() && gameDoc.data().open === true;
+
+      // fetch all picks
+      const snap = await getDocs(collection(db, "lotto"));
+      const taken = {};
+      myNumber = null;
+      snap.forEach(d => {
+        taken[d.id] = d.data().number;
+        if (d.id === currentEmail) myNumber = d.data().number;
+      });
+
+      // show status
+      if (adminEmails.includes(currentEmail)) {
+        showAdmin();
+      } else {
+        hideAdmin();
+      }
+      // user view status
+      if (!gameOpen) {
+        status.textContent = "🔒 Game is CLOSED. Please wait for admin.";
+      } else if (myNumber) {
+        status.textContent = `✅ You selected: ${myNumber}`;
+      } else {
+        status.textContent = "🎯 Game is OPEN. Please pick your number.";
+      }
+
+      renderGrid(taken, !gameOpen);
+    }
+
+    // show admin panel
+    function showAdmin() {
+      document.getElementById("adminControls").style.display = "block";
+      document.getElementById("toggleGameBtn").textContent =
+        gameOpen ? "Close Game" : "Open Game";
+    }
+    function hideAdmin() {
+      document.getElementById("adminControls").style.display = "none";
+    }
+
+    // draw 1–49, disabling as needed
+    function renderGrid(taken, disableAll) {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+
+      for (let i = 1; i <= 49; i++) {
+        const box = document.createElement("div");
+        box.classList.add("number");
+        box.textContent = i;
+
+        const takenBy = Object.entries(taken).find(([e, num]) => num === i);
+
+        if (takenBy) {
+          box.classList.add("taken");
+          if (takenBy[0] === currentEmail) {
+            box.classList.add("mine");
+          }
+        } else if (disableAll) {
+          box.classList.add("disabled");
+        } else {
+          box.onclick = () => selectNumber(i);
+        }
+
+        grid.appendChild(box);
+      }
+    }
+
+    // user selects number
+    async function selectNumber(num) {
+      if (!gameOpen) return;
+      await setDoc(doc(db, "lotto", currentEmail), { number: num });
+      myNumber = num;
+      loadNumbers();
+    }
+
+    // user clears pick
+    async function clearSelection() {
+      if (!currentEmail || !gameOpen) return;
+      await deleteDoc(doc(db, "lotto", currentEmail));
+      myNumber = null;
+      loadNumbers();
+    }
+
+    // admin toggles open/close
+    async function toggleGame() {
+      await setDoc(doc(db, "settings", "game"), { open: !gameOpen });
+      loadNumbers();
+    }
+
+    // expose for onclick
+    window.loadNumbers = loadNumbers;
+    window.clearSelection = clearSelection;
+    window.toggleGame = toggleGame;
+  </script>
+</body>
+</html>
