@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KPMG K1 Team Building</title>
+  <title>KPMG K1 Choose My Luck (Real-Time)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,7 +15,7 @@
     #email {
       padding: 0.5rem;
       font-size: 1rem;
-      width: 250px;
+      width: 300px;
       margin-right: 0.5rem;
     }
     button {
@@ -54,7 +54,6 @@
       pointer-events: none;
     }
     .number.disabled {
-      /* for game-closed, available numbers */
       background-color: #ddd;
       cursor: not-allowed;
       pointer-events: none;
@@ -69,36 +68,32 @@
   </style>
 </head>
 <body>
-  <h2>KPMG K1 Choose My Luck</h2>
+  <h2>🎯 KPMG K1 Choose My Luck</h2>
 
   <input type="email" id="email" placeholder="Enter your email" />
-  <button onclick="loadNumbers()">Enter Game</button>
+  <button onclick="enterGame()">Enter Game</button>
 
   <div id="status"></div>
-
   <div class="grid" id="grid"></div>
-
   <button style="margin-top:1rem;" onclick="clearSelection()">Change Number</button>
 
   <div id="adminControls">
     <strong>Admin Controls:</strong><br/>
-    <button id="toggleGameBtn" onclick="toggleGame()">...</button>
+    <button id="toggleGameBtn" onclick="toggleGame()">…</button>
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
     import {
       getFirestore,
       collection,
-      getDocs,
-      getDoc,
-      setDoc,
       doc,
+      onSnapshot,
+      setDoc,
       deleteDoc
     } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
 
-    // ← your Firebase config
+    // Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
       authDomain: "lottogame-16083.firebaseapp.com",
@@ -110,11 +105,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ← Whitelist + admin
+    // Whitelist & admin
     const allowedEmails = [
       "nopparatb@kpmg.co.th",
       "theerawatj@kpmg.co.th",
       "palidal@kpmg.co.th",
+      "manitan@kpmg.co.th",
+      "sudaratr@kpmg.co.th"
       "gameadmin@kpmg.co.th"
     ];
     const adminEmails = ["gameadmin@kpmg.co.th"];
@@ -122,14 +119,15 @@
     let currentEmail = "";
     let myNumber = null;
     let gameOpen = false;
+    let lottoData = {}; // { email: number, ... }
 
-    // Load game status, picks, and render
-    async function loadNumbers() {
+    // Called when user clicks "Enter Game"
+    function enterGame() {
       currentEmail = document.getElementById("email").value.trim().toLowerCase();
       const status = document.getElementById("status");
       const grid = document.getElementById("grid");
 
-      // email validation
+      // Email checks
       if (!currentEmail) {
         status.textContent = "❗ Please enter your email.";
         grid.innerHTML = "";
@@ -143,49 +141,63 @@
         return;
       }
 
-      // fetch game status
-      const gameDoc = await getDoc(doc(db, "settings", "game"));
-      gameOpen = gameDoc.exists() && gameDoc.data().open === true;
-
-      // fetch all picks
-      const snap = await getDocs(collection(db, "lotto"));
-      const taken = {};
-      myNumber = null;
-      snap.forEach(d => {
-        taken[d.id] = d.data().number;
-        if (d.id === currentEmail) myNumber = d.data().number;
-      });
-
-      // show status
+      // Show/hide admin
       if (adminEmails.includes(currentEmail)) {
-        showAdmin();
+        document.getElementById("adminControls").style.display = "block";
       } else {
         hideAdmin();
       }
-      // user view status
-      if (!gameOpen) {
+
+      // Start real-time listeners
+      listenGameStatus();
+      listenLottoPicks();
+    }
+
+    // Real-time listener for game open/close
+    function listenGameStatus() {
+      const settingsDoc = doc(db, "settings", "game");
+      onSnapshot(settingsDoc, snap => {
+        gameOpen = snap.exists() && snap.data().open === true;
+        updateStatusText();
+        renderGrid();
+        updateAdminButton();
+      });
+    }
+
+    // Real-time listener for all lotto picks
+    function listenLottoPicks() {
+      const lottoCol = collection(db, "lotto");
+      onSnapshot(lottoCol, snapshot => {
+        lottoData = {};
+        snapshot.forEach(d => lottoData[d.id] = d.data().number);
+        myNumber = lottoData[currentEmail] || null;
+        updateStatusText();
+        renderGrid();
+      });
+    }
+
+    function updateStatusText() {
+      const status = document.getElementById("status");
+      if (!gameOpen && !adminEmails.includes(currentEmail)) {
         status.textContent = "🔒 Game is CLOSED. Please wait for admin.";
       } else if (myNumber) {
         status.textContent = `✅ You selected: ${myNumber}`;
-      } else {
+      } else if (gameOpen) {
         status.textContent = "🎯 Game is OPEN. Please pick your number.";
       }
-
-      renderGrid(taken, !gameOpen);
     }
 
-    // show admin panel
-    function showAdmin() {
-      document.getElementById("adminControls").style.display = "block";
-      document.getElementById("toggleGameBtn").textContent =
-        gameOpen ? "Close Game" : "Open Game";
+    function updateAdminButton() {
+      const btn = document.getElementById("toggleGameBtn");
+      btn.textContent = gameOpen ? "Close Game" : "Open Game";
     }
+
     function hideAdmin() {
       document.getElementById("adminControls").style.display = "none";
     }
 
-    // draw 1–49, disabling as needed
-    function renderGrid(taken, disableAll) {
+    // Draw the 1–49 grid based on current lottoData & gameOpen
+    function renderGrid() {
       const grid = document.getElementById("grid");
       grid.innerHTML = "";
 
@@ -194,14 +206,13 @@
         box.classList.add("number");
         box.textContent = i;
 
-        const takenBy = Object.entries(taken).find(([e, num]) => num === i);
+        // Is this number taken?
+        const owner = Object.entries(lottoData).find(([, num]) => num === i)?.[0];
 
-        if (takenBy) {
+        if (owner) {
           box.classList.add("taken");
-          if (takenBy[0] === currentEmail) {
-            box.classList.add("mine");
-          }
-        } else if (disableAll) {
+          if (owner === currentEmail) box.classList.add("mine");
+        } else if (!gameOpen) {
           box.classList.add("disabled");
         } else {
           box.onclick = () => selectNumber(i);
@@ -211,30 +222,25 @@
       }
     }
 
-    // user selects number
+    // User picks a number
     async function selectNumber(num) {
       if (!gameOpen) return;
       await setDoc(doc(db, "lotto", currentEmail), { number: num });
-      myNumber = num;
-      loadNumbers();
     }
 
-    // user clears pick
+    // User clears their pick
     async function clearSelection() {
-      if (!currentEmail || !gameOpen) return;
+      if (!gameOpen) return;
       await deleteDoc(doc(db, "lotto", currentEmail));
-      myNumber = null;
-      loadNumbers();
     }
 
-    // admin toggles open/close
+    // Admin toggles game
     async function toggleGame() {
       await setDoc(doc(db, "settings", "game"), { open: !gameOpen });
-      loadNumbers();
     }
 
-    // expose for onclick
-    window.loadNumbers = loadNumbers;
+    // Expose for buttons
+    window.enterGame = enterGame;
     window.clearSelection = clearSelection;
     window.toggleGame = toggleGame;
   </script>
