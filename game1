@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotto Number Picker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f2f2f2;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 0.5rem;
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .number {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #e0e0e0;
+    }
+    .number.selected {
+      background-color: #90ee90;
+      cursor: not-allowed;
+    }
+    .number.mine {
+      background-color: #add8e6;
+    }
+    #status {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Lotto Game</h2>
+    <label for="email">Enter your email:</label><br>
+    <input type="email" id="email"><br>
+    <button onclick="verifyEmail()">Verify Email</button>
+    <div id="status"></div>
+
+    <div id="lottoSection" style="display:none;">
+      <h3>Select Your Lotto Number</h3>
+      <div class="number-grid" id="numberGrid"></div>
+      <button onclick="clearSelection()">Change Number</button>
+    </div>
+  </div>
+
+  <script>
+    const allowedEmails = ["test@example.com", "user1@gmail.com", "john.doe@k1.com"];
+    let selectedNumbers = {}; // email: number
+    let currentEmail = null;
+
+    function verifyEmail() {
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      if (allowedEmails.includes(email)) {
+        currentEmail = email;
+        document.getElementById('status').textContent = "Email verified. You may select a number.";
+        document.getElementById('lottoSection').style.display = "block";
+        renderGrid();
+      } else {
+        document.getElementById('status').textContent = "Email not allowed. Please use an authorized email.";
+        document.getElementById('lottoSection').style.display = "none";
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('numberGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 49; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'number';
+        btn.textContent = i;
+
+        // Check if selected
+        const selectedBy = Object.entries(selectedNumbers).find(([email, num]) => num === i);
+        if (selectedBy) {
+          btn.classList.add('selected');
+          if (selectedBy[0] === currentEmail) {
+            btn.classList.add('mine');
+          } else {
+            btn.style.pointerEvents = 'none';
+          }
+        } else {
+          btn.onclick = () => selectNumber(i);
+        }
+
+        grid.appendChild(btn);
+      }
+    }
+
+    function selectNumber(num) {
+      selectedNumbers[currentEmail] = num;
+      renderGrid();
+    }
+
+    function clearSelection() {
+      delete selectedNumbers[currentEmail];
+      renderGrid();
+    }
+  </script>
+</body>
+</html>
