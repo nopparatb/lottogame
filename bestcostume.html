@@ -16,13 +16,23 @@
       color: #333;
       font-family: 'Segoe UI', sans-serif;
     }
-    .election-title { font-size: 1.0rem; font-weight: 600; margin: 0; color: #111; text-align: center}
-    .election-sub { font-size: 0.85rem; color: #666; text-align: center}
-    .card { border: none; border-radius: 0.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-    .list-group-item { background: #fff; border: none; border-bottom: 1px solid #eceeef; padding: 0.75rem 1rem; }
+    .election-title { font-size: 1.0rem; font-weight: 600; margin: 0; color: #111; text-align: center }
+    .election-sub   { font-size: 0.85rem; color: #666; text-align: center }
+    .card           { border: none; border-radius: 0.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .list-group-item {
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid #eceeef;
+      padding: 0.75rem 1rem;
+    }
     .list-group-item:last-child { border-bottom: none; }
-    .btn-vote { background: var(--primary); color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
-    .btn-change { background: var(--accent); color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
+    .btn-vote   { background: var(--primary); color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
+    .btn-change { background: var(--accent);  color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
+    .rank-icon {
+      display: inline-block;
+      width: 1.25em;
+      text-align: center;
+    }
     .d-none { display: none !important; }
   </style>
 </head>
@@ -63,6 +73,10 @@
       <button id="toggleVotingBtn" class="btn btn-change w-100 mb-4">Open Voting</button>
       <p class="election-title mb-2">📊 Live Results</p>
       <ul id="resultsList" class="list-group list-group-flush"></ul>
+      <div class="d-flex justify-content-center gap-2 mt-3">
+        <button id="clearAllVotesBtn" class="btn btn-change">Clear All Votes</button>
+        <button id="deleteAllContestantsBtn" class="btn btn-change">Delete All Contestants</button>
+      </div>
     </div>
   </div>
 
@@ -88,9 +102,10 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import {
       getFirestore, collection, doc, setDoc,
-      onSnapshot, getDoc, serverTimestamp
+      onSnapshot, getDoc, getDocs, deleteDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
+    // Initialize Firebase
     const app = initializeApp({
       apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
       authDomain: "lottogame-16083.firebaseapp.com",
@@ -101,13 +116,9 @@
     });
     const db = getFirestore(app);
 
-    const allowed = [
-      "nopparatb@kpmg.co.th","theerawatj@kpmg.co.th","palidal@kpmg.co.th",
-      "manitan@kpmg.co.th","sudaratr@kpmg.co.th","chanaratc@kpmg.co.th",
-      "pornthipr@kpmg.co.th","gameadmin@kpmg.co.th"
-    ];
+    // Elements & state
+    const allowed = ["nopparatb@kpmg.co.th","theerawatj@kpmg.co.th","palidal@kpmg.co.th","manitan@kpmg.co.th","sudaratr@kpmg.co.th","chanaratc@kpmg.co.th","pornthipr@kpmg.co.th","gameadmin@kpmg.co.th"];
     let email = '', isAdmin = false;
-
     const loginDiv       = document.getElementById('loginDiv');
     const adminDiv       = document.getElementById('adminDiv');
     const userDiv        = document.getElementById('userDiv');
@@ -121,10 +132,17 @@
     const contestantList = document.getElementById('contestantList');
     const resultsList    = document.getElementById('resultsList');
     const voteOptions    = document.getElementById('voteOptions');
+    const clearAllVotesBtn       = document.getElementById('clearAllVotesBtn');
+    const deleteAllContestantsBtn = document.getElementById('deleteAllContestantsBtn');
 
     const votingRef   = doc(db, 'settings', 'voting');
     const contestants = collection(db, 'contestants');
     const votes       = collection(db, 'votes');
+
+    // Map number→name
+    const contestantMap = {};
+    // Top-4 icons
+    const rankingIcons = ['🥇','🥈','🥉','🏅'];
 
     function reset() {
       email = '';
@@ -147,7 +165,6 @@
       userEmailUser.textContent  = email;
       loginDiv.classList.add('d-none');
       (isAdmin ? adminDiv : userDiv).classList.remove('d-none');
-
       listenVotingSettings();
       listenContestants();
       listenVotes();
@@ -185,7 +202,7 @@
       alert('Your vote has been recorded!');
     };
 
-    // SETTINGS LISTENER
+    // LISTEN SETTINGS
     function listenVotingSettings() {
       onSnapshot(votingRef, snap => {
         const open = snap.exists() && snap.data().isOpen;
@@ -195,19 +212,19 @@
       });
     }
 
-    // CONTESTANTS LISTENER (client-side sort)
+    // LISTEN CONTESTANTS
     function listenContestants() {
       onSnapshot(contestants, snap => {
         contestantList.innerHTML = '';
         voteOptions.innerHTML    = '';
 
-        // build & sort array of {number,name}
         const list = snap.docs
           .map(d => d.data())
           .sort((a, b) => a.number - b.number);
 
-        // render sorted
         list.forEach(({ number, name }) => {
+          contestantMap[number] = name;
+  
           contestantList.insertAdjacentHTML('beforeend',
             `<li class="list-group-item">#${number} ${name}</li>`
           );
@@ -221,22 +238,56 @@
       });
     }
 
-    // VOTES LISTENER
+    // LISTEN VOTES
     function listenVotes() {
       onSnapshot(votes, snap => {
         const counts = {};
         snap.forEach(d => {
-          const x = d.data().contestantNumber;
-          counts[x] = (counts[x] || 0) + 1;
+          const num = d.data().contestantNumber;
+          counts[num] = (counts[num] || 0) + 1;
         });
+
+        const results = Object.entries(counts).map(([num, ct]) => ({
+          number: +num,
+          name: contestantMap[+num] || '',
+          count: ct
+        })).sort((a, b) =>
+          b.count - a.count || a.number - b.number
+        );
+
         resultsList.innerHTML = '';
-        Object.keys(counts).sort((a, b) => a - b).forEach(num => {
+        results.forEach((item, idx) => {
+          const icon = rankingIcons[idx] || '';
           resultsList.insertAdjacentHTML('beforeend',
-            `<li class="list-group-item">#${num} — ${counts[num]} votes</li>`
+            `<li class="list-group-item d-flex justify-content-between align-items-center">
+               <div class="d-flex align-items-center">
+                 <span class="rank-icon me-2">${icon}</span>
+                 <span>#${item.number} ${item.name}</span>
+               </div>
+               <div>${item.count} votes</div>
+             </li>`
           );
         });
       });
     }
+
+    // CLEAR ALL VOTES
+    clearAllVotesBtn.onclick = async () => {
+      if (!confirm('Are you sure you want to delete ALL votes? This cannot be undone.')) return;
+      const snap = await getDocs(votes);
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+    };
+
+    // DELETE ALL CONTESTANTS
+    deleteAllContestantsBtn.onclick = async () => {
+      if (!confirm('Are you sure you want to delete ALL contestants? This cannot be undone.')) return;
+      const snap = await getDocs(contestants);
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+
+ const snap2 = await getDocs(votes);
+      await Promise.all(snap2.docs.map(d => deleteDoc(d.ref)));
+
+    };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
