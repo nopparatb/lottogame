@@ -88,7 +88,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import {
       getFirestore, collection, doc, setDoc,
-      onSnapshot, getDoc, query, where, getDocs, serverTimestamp
+      onSnapshot, getDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
     const app = initializeApp({
@@ -108,23 +108,23 @@
     ];
     let email = '', isAdmin = false;
 
-    const loginDiv         = document.getElementById('loginDiv');
-    const adminDiv         = document.getElementById('adminDiv');
-    const userDiv          = document.getElementById('userDiv');
-    const userEmailAdmin   = document.getElementById('userEmailAdmin');
-    const userEmailUser    = document.getElementById('userEmailUser');
-    const logoutAdmin      = document.getElementById('logoutBtnAdmin');
-    const logoutUser       = document.getElementById('logoutBtnUser');
-    const adminStatusEl    = document.getElementById('adminStatus');
-    const votingStatusEl   = document.getElementById('votingStatus');
-    const toggleBtn        = document.getElementById('toggleVotingBtn');
-    const contestantList   = document.getElementById('contestantList');
-    const resultsList      = document.getElementById('resultsList');
-    const voteOptions      = document.getElementById('voteOptions');
+    const loginDiv       = document.getElementById('loginDiv');
+    const adminDiv       = document.getElementById('adminDiv');
+    const userDiv        = document.getElementById('userDiv');
+    const userEmailAdmin = document.getElementById('userEmailAdmin');
+    const userEmailUser  = document.getElementById('userEmailUser');
+    const logoutAdmin    = document.getElementById('logoutBtnAdmin');
+    const logoutUser     = document.getElementById('logoutBtnUser');
+    const adminStatusEl  = document.getElementById('adminStatus');
+    const votingStatusEl = document.getElementById('votingStatus');
+    const toggleBtn      = document.getElementById('toggleVotingBtn');
+    const contestantList = document.getElementById('contestantList');
+    const resultsList    = document.getElementById('resultsList');
+    const voteOptions    = document.getElementById('voteOptions');
 
-    const votingRef   = doc(db,'settings','voting');
-    const contestants = collection(db,'contestants');
-    const votes       = collection(db,'votes');
+    const votingRef   = doc(db, 'settings', 'voting');
+    const contestants = collection(db, 'contestants');
+    const votes       = collection(db, 'votes');
 
     function reset() {
       email = '';
@@ -141,20 +141,19 @@
       e.preventDefault();
       const val = document.getElementById('emailInput').value.trim().toLowerCase();
       if (!allowed.includes(val)) return alert('Access denied.');
-      email      = val;
-      isAdmin    = (val === 'gameadmin@kpmg.co.th');
+      email   = val;
+      isAdmin = (val === 'gameadmin@kpmg.co.th');
       userEmailAdmin.textContent = email;
       userEmailUser.textContent  = email;
       loginDiv.classList.add('d-none');
       (isAdmin ? adminDiv : userDiv).classList.remove('d-none');
 
-      // start listening once logged in
       listenVotingSettings();
       listenContestants();
       listenVotes();
     };
 
-    // ADD CONTESTANT (unchanged)
+    // ADD CONTESTANT
     document.getElementById('addContestantForm').onsubmit = async e => {
       e.preventDefault();
       const num  = +document.getElementById('contestantNumber').value;
@@ -170,7 +169,7 @@
       await setDoc(votingRef, { isOpen: !(snap.exists() && snap.data().isOpen) });
     };
 
-    // SUBMIT VOTE using email as doc ID
+    // SUBMIT VOTE
     document.getElementById('voteForm').onsubmit = async e => {
       e.preventDefault();
       const snap = await getDoc(votingRef);
@@ -186,7 +185,7 @@
       alert('Your vote has been recorded!');
     };
 
-    // LISTEN for SETTINGS
+    // SETTINGS LISTENER
     function listenVotingSettings() {
       onSnapshot(votingRef, snap => {
         const open = snap.exists() && snap.data().isOpen;
@@ -196,31 +195,33 @@
       });
     }
 
-    // LISTEN for CONTESTANTS
+    // CONTESTANTS LISTENER (client-side sort)
     function listenContestants() {
       onSnapshot(contestants, snap => {
         contestantList.innerHTML = '';
         voteOptions.innerHTML    = '';
-        const data = {};
-        snap.forEach(d => {
-          const v = d.data();
-          data[v.number] = v.name;
+
+        // build & sort array of {number,name}
+        const list = snap.docs
+          .map(d => d.data())
+          .sort((a, b) => a.number - b.number);
+
+        // render sorted
+        list.forEach(({ number, name }) => {
           contestantList.insertAdjacentHTML('beforeend',
-            `<li class="list-group-item">#${v.number} ${v.name}</li>`
+            `<li class="list-group-item">#${number} ${name}</li>`
           );
-        });
-        Object.keys(data).sort((a, b) => a - b).forEach(num => {
           voteOptions.insertAdjacentHTML('beforeend',
             `<li class="list-group-item d-flex justify-content-between align-items-center">
-               <span>#${num} ${data[num]}</span>
-               <input type="radio" name="contestant" value="${num}"/>
+               <span>#${number} ${name}</span>
+               <input type="radio" name="contestant" value="${number}"/>
              </li>`
           );
         });
       });
     }
 
-    // LISTEN for VOTES
+    // VOTES LISTENER
     function listenVotes() {
       onSnapshot(votes, snap => {
         const counts = {};
