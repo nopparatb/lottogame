@@ -2,227 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>KPMG K1 Best Costume Voting</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
-    h2 { margin-top: 1.5rem; }
-    form { margin-bottom: 1rem; }
-    input, button { padding: .5rem; margin-right: .5rem; }
-    ul { list-style: none; padding: 0; }
-    li { margin: .25rem 0; }
-    #voteFormDiv[style*="display: none"] { opacity: 0.5; }
+    :root {
+      --primary: #4300FF;
+      --accent: #00CAFF;
+    }
+    body {
+      background: #f5f7fa;
+      color: #333;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .election-title { font-size: 1.1rem; font-weight: 600; margin: 0; color: #111; text-align: center}
+    .election-sub { font-size: 0.85rem; color: #666; text-align: center}
+    .card { border: none; border-radius: 0.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .list-group-item { background: #fff; border: none; border-bottom: 1px solid #eceeef; padding: 0.75rem 1rem; }
+    .list-group-item:last-child { border-bottom: none; }
+    .btn-vote { background: var(--primary); color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
+    .btn-change { background: var(--accent); color: #fff; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
+    .d-none { display: none !important; }
   </style>
 </head>
 <body>
-  <div id="loginDiv">
-    <h2>🔑 Login to Vote: KPMG K1 Best Costume</h2>
-    <form id="loginForm">
-      <input type="email" id="emailInput" placeholder="Your email" required />
-      <button type="submit">Enter</button>
-    </form>
-  </div>
-
-  <div id="adminDiv" style="display:none;">
-    <h2>🛠 Admin Panel: KPMG K1 Best Costume</h2>
-    <div>
-      <h3>Current Contestants</h3>
-      <ul id="contestantList"></ul>
-      <form id="addContestantForm">
-        <input type="number" id="contestantNumber" placeholder="Number" required />
-        <input type="text" id="contestantName" placeholder="Name" required />
-        <button type="submit">Add Contestant</button>
-      </form>
-    </div>
-    <div>
-      <button id="toggleVotingBtn">Open Voting</button>
-    </div>
-    <h3>📊 Live Results</h3>
-    <ul id="resultsList"></ul>
-  </div>
-
-  <div id="userDiv" style="display:none;">
-    <h2>Vote for K1 Best Costume in the theme of HAWAII!!!</h2>
-    <div id="votingStatus">Loading status…</div>
-    <div id="voteFormDiv" style="display:none;">
-      <form id="voteForm">
-        <div id="voteOptions"></div>
-        <button type="submit">Vote</button>
+  <!-- Login Screen -->
+  <div id="loginDiv" class="container py-4">
+    <div class="card p-4">
+      <p class="election-title">🥂KPMG K1 Team Building🥂</p>
+      <p class="election-title">🍸Please login to vote best costume🍸</p>
+      <form id="loginForm" class="mt-3">
+        <div class="input-group mb-3">
+          <input type="email" id="emailInput" class="form-control" placeholder="Your email" required>
+          <button class="btn btn-vote" type="submit">Enter</button>
+        </div>
       </form>
     </div>
   </div>
 
+  <!-- Admin Panel -->
+  <div id="adminDiv" class="container py-4 d-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <small class="text-secondary">Logged in as: <span id="userEmailAdmin"></span></small>
+      <button id="logoutBtnAdmin" class="btn btn-outline-secondary btn-sm">Logout</button>
+    </div>
+    <div class="card p-4">
+      <p class="election-title">KPMG K1 Costume Voting - Admin</p>
+      <p class="election-sub mb-2">Manage Contestants & Voting</p>
+      <p id="adminStatus" class="election-sub mb-3">Loading status...</p>
+      <div class="mb-3">
+        <p class="election-title mb-2">Current Contestants</p>
+        <ul id="contestantList" class="list-group list-group-flush"></ul>
+      </div>
+      <form id="addContestantForm" class="row g-2 mb-4">
+        <div class="col-3"><input type="number" id="contestantNumber" class="form-control" placeholder="#" required></div>
+        <div class="col-7"><input type="text" id="contestantName" class="form-control" placeholder="Name" required></div>
+        <div class="col-2"><button type="submit" class="btn btn-vote w-100">Add</button></div>
+      </form>
+      <button id="toggleVotingBtn" class="btn btn-change w-100 mb-4">Open Voting</button>
+      <p class="election-title mb-2">📊 Live Results</p>
+      <ul id="resultsList" class="list-group list-group-flush"></ul>
+    </div>
+  </div>
+
+  <!-- User Voting Screen -->
+  <div id="userDiv" class="container py-4 d-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <small class="text-secondary">Logged in as: <span id="userEmailUser"></span></small>
+      <button id="logoutBtnUser" class="btn btn-outline-secondary btn-sm">Logout</button>
+    </div>
+    <div class="card p-4">
+      <p class="election-title">Vote for K1 Best Costume</p>
+      <p class="election-sub mb-3">Theme: HAWAII</p>
+      <p id="votingStatus" class="election-sub mb-3">Loading status…</p>
+      <form id="voteForm" class="mt-3">
+        <ul id="voteOptions" class="list-group mb-3"></ul>
+        <button type="submit" class="btn btn-vote w-100">Submit Vote</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase & App Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import {
-      getFirestore,
-      collection,
-      doc,
-      setDoc,
-      addDoc,
-      updateDoc,
-      onSnapshot,
-      getDoc,
-      query,
-      where,
-      getDocs,
-      serverTimestamp
+      getFirestore, collection, doc, setDoc, addDoc,
+      updateDoc, onSnapshot, getDoc, query, where, getDocs, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
-    // Firebase config
-    const firebaseConfig = {
+    const app = initializeApp({
       apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
       authDomain: "lottogame-16083.firebaseapp.com",
       projectId: "lottogame-16083",
       storageBucket: "lottogame-16083.firebasestorage.app",
       messagingSenderId: "278778623701",
       appId: "1:278778623701:web:c7828b036c617a13fa145c"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    });
     const db = getFirestore(app);
 
-    // Hard-coded access list
-    const allowedEmails = [
-      "nopparatb@kpmg.co.th",
-      "theerawatj@kpmg.co.th",
-      "palidal@kpmg.co.th",
-      "manitan@kpmg.co.th",
-      "sudaratr@kpmg.co.th",
-      "chanaratc@kpmg.co.th",
-      "pornthipr@kpmg.co.th",
-      "gameadmin@kpmg.co.th"
+    const allowed = [
+      "nopparatb@kpmg.co.th","theerawatj@kpmg.co.th","palidal@kpmg.co.th",
+      "manitan@kpmg.co.th","sudaratr@kpmg.co.th","chanaratc@kpmg.co.th",
+      "pornthipr@kpmg.co.th","gameadmin@kpmg.co.th"
     ];
-    let currentUserEmail = '';
-    let isAdmin = false;
+    let email = '', isAdmin = false;
 
-    // Element refs
-    const loginDiv       = document.getElementById('loginDiv');
-    const adminDiv       = document.getElementById('adminDiv');
-    const userDiv        = document.getElementById('userDiv');
+    const loginDiv = document.getElementById('loginDiv');
+    const adminDiv = document.getElementById('adminDiv');
+    const userDiv  = document.getElementById('userDiv');
+    const userEmailAdmin = document.getElementById('userEmailAdmin');
+    const userEmailUser  = document.getElementById('userEmailUser');
+    const logoutAdmin    = document.getElementById('logoutBtnAdmin');
+    const logoutUser     = document.getElementById('logoutBtnUser');
+    const adminStatusEl  = document.getElementById('adminStatus');
+    const votingStatusEl = document.getElementById('votingStatus');
     const toggleBtn      = document.getElementById('toggleVotingBtn');
     const contestantList = document.getElementById('contestantList');
-    const voteOptions    = document.getElementById('voteOptions');
     const resultsList    = document.getElementById('resultsList');
-    const votingStatusEl = document.getElementById('votingStatus');
+    const voteOptions    = document.getElementById('voteOptions');
 
-    // Firestore refs
-    const votingDocRef   = doc(db,'settings','voting');
-    const contestantsCol = collection(db,'contestants');
-    const votesCol       = collection(db,'votes');
+    const votingRef   = doc(db,'settings','voting');
+    const contestants = collection(db,'contestants');
+    const votes       = collection(db,'votes');
 
-    // In-memory storage
-    let contestantsData = {};
+    function reset() {
+      email = '';
+      loginDiv.classList.remove('d-none');
+      adminDiv.classList.add('d-none');
+      userDiv.classList.add('d-none');
+      document.getElementById('emailInput').value = '';
+    }
+    logoutAdmin.onclick = reset;
+    logoutUser.onclick  = reset;
 
-    // LOGIN HANDLER
-    document.getElementById('loginForm').addEventListener('submit', e => {
+    document.getElementById('loginForm').onsubmit = e => {
       e.preventDefault();
-      const email = document.getElementById('emailInput').value.trim().toLowerCase();
-      if (!allowedEmails.includes(email)) return alert('Access denied.');
-      currentUserEmail = email;
-      isAdmin = email === 'gameadmin@kpmg.co.th';
-      loginDiv.style.display = 'none';
-      if (isAdmin) adminDiv.style.display = 'block';
-      else userDiv.style.display = 'block';
-    });
+      const val = document.getElementById('emailInput').value.trim().toLowerCase();
+      if (!allowed.includes(val)) return alert('Access denied.');
+      email = val;
+      isAdmin = val === 'gameadmin@kpmg.co.th';
+      userEmailAdmin.textContent = email;
+      userEmailUser.textContent  = email;
+      loginDiv.classList.add('d-none');
+      (isAdmin ? adminDiv : userDiv).classList.remove('d-none');
+    };
 
-    // ADMIN: ADD CONTESTANT
-    document.getElementById('addContestantForm').addEventListener('submit', async e => {
+    document.getElementById('addContestantForm').onsubmit = async e => {
       e.preventDefault();
-      const num  = parseInt(document.getElementById('contestantNumber').value,10);
+      const num  = +document.getElementById('contestantNumber').value;
       const name = document.getElementById('contestantName').value.trim();
-      if (!num || !name) return;
-      await setDoc(doc(contestantsCol, String(num)), { number: num, name });
+      if (!num||!name) return;
+      await setDoc(doc(contestants, String(num)), { number:num, name });
       e.target.reset();
-    });
+    };
 
-    // ADMIN: TOGGLE VOTING
-    toggleBtn.addEventListener('click', async () => {
-      const snap = await getDoc(votingDocRef);
-      const isOpen = snap.exists() && snap.data().isOpen;
-      await setDoc(votingDocRef, { isOpen: !isOpen });
-    });
+    toggleBtn.onclick = async () => {
+      const snap = await getDoc(votingRef);
+      await setDoc(votingRef, { isOpen: !(snap.exists()&&snap.data().isOpen) });
+    };
 
-    // USER: SUBMIT OR CHANGE VOTE
-    document.getElementById('voteForm').addEventListener('submit', async e => {
+    document.getElementById('voteForm').onsubmit = async e => {
       e.preventDefault();
-      const votingSnap = await getDoc(votingDocRef);
-      if (!votingSnap.exists() || !votingSnap.data().isOpen) {
-        return alert('Voting is closed.');
-      }
+      const snap = await getDoc(votingRef);
+      if (!snap.exists()||!snap.data().isOpen) return alert('Voting is closed.');
       const choice = document.querySelector('input[name="contestant"]:checked');
       if (!choice) return alert('Pick one option.');
-      const selectedNum = parseInt(choice.value,10);
-      const q      = query(votesCol, where('email','==', currentUserEmail));
-      const res    = await getDocs(q);
-      if (res.empty) {
-        await addDoc(votesCol, {
-          email: currentUserEmail,
-          contestantNumber: selectedNum,
-          timestamp: serverTimestamp()
-        });
-        alert('Thank you for voting!');
-      } else {
-        const ref = res.docs[0].ref;
-        await updateDoc(ref, {
-          contestantNumber: selectedNum,
-          timestamp: serverTimestamp()
-        });
-        alert('Your vote has been updated!');
-      }
-    });
+      const num = +choice.value;
+      const q   = query(votes, where('email','==',email));
+      const res = await getDocs(q);
+      if (res.empty) await addDoc(votes,{ email, contestantNumber:num, timestamp:serverTimestamp() });
+      else await updateDoc(res.docs[0].ref,{ contestantNumber:num, timestamp:serverTimestamp() });
+      alert('Your vote has been recorded!');
+    };
 
-    // REAL-TIME LISTENERS
-    // Voting status
-    onSnapshot(votingDocRef, snap => {
-      const open = snap.exists() && snap.data().isOpen;
+    onSnapshot(votingRef, snap => {
+      const open = snap.exists()&&snap.data().isOpen;
+      adminStatusEl.textContent  = open ? 'Voting is OPEN'  : 'Voting is CLOSED';
       votingStatusEl.textContent = open ? '✅ Voting is OPEN' : '⛔ Voting is CLOSED';
-      document.getElementById('voteFormDiv').style.display = (!isAdmin && open) ? 'block' : 'none';
-      toggleBtn.textContent = open ? 'Close Voting' : 'Open Voting';
+      toggleBtn.textContent      = open ? 'Close Voting'    : 'Open Voting';
     });
 
-    // Contestants & options
-    onSnapshot(contestantsCol, snap => {
-      contestantsData = {};
+    onSnapshot(contestants, snap => {
       contestantList.innerHTML = '';
-      snap.forEach(d => {
-        const data = d.data();
-        contestantsData[data.number] = data.name;
-        const li = document.createElement('li');
-        li.textContent = `#${data.number}: ${data.name}`;
-        contestantList.appendChild(li);
+      voteOptions.innerHTML    = '';
+      const data = {};
+      snap.forEach(d=>{ const v=d.data(); data[v.number]=v.name; contestantList.insertAdjacentHTML('beforeend',`<li class=\"list-group-item\">#${v.number} ${v.name}</li>`); });
+      Object.keys(data).sort((a,b)=>a-b).forEach(num=>{
+        voteOptions.insertAdjacentHTML('beforeend',
+          `<li class=\"list-group-item d-flex justify-content-between align-items-center\"><span>#${num} ${data[num]}</span><input type=\"radio\" name=\"contestant\" value=\"${num}\"/></li>`);
       });
-      voteOptions.innerHTML = '';
-      Object.keys(contestantsData).sort((a,b)=>a-b).forEach(num => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="radio" name="contestant" value="${num}" /> #${num}: ${contestantsData[num]}`;
-        voteOptions.appendChild(label);
-        voteOptions.appendChild(document.createElement('br'));
-      });
-      updateResultsUI();
     });
 
-    // Votes tally
-    onSnapshot(votesCol, snap => {
+    onSnapshot(votes, snap => {
       const counts = {};
-      snap.forEach(d => {
-        const v = d.data().contestantNumber;
-        counts[v] = (counts[v]||0) + 1;
-      });
-      updateResultsUI(counts);
-    });
-
-    // Render results
-    function updateResultsUI(counts = {}) {
+      snap.forEach(d=>{ const x=d.data().contestantNumber; counts[x]=(counts[x]||0)+1; });
       resultsList.innerHTML = '';
-      Object.keys(contestantsData).sort((a,b)=>a-b).forEach(num => {
-        const name  = contestantsData[num];
-        const count = counts[num] || 0;
-        const li    = document.createElement('li');
-        li.textContent = `#${num} ${name} — ${count} vote${count===1?'':'s'}`;
-        resultsList.appendChild(li);
+      Object.keys(counts).sort((a,b)=>a-b).forEach(num=>{
+        resultsList.insertAdjacentHTML('beforeend',`<li class=\"list-group-item\">#${num} — ${counts[num]} votes</li>`);
       });
-    }
+    });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
