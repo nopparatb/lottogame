@@ -23,8 +23,8 @@
     .election-sub   { font-size: 0.85rem; color: #666; text-align: center; }
     .grid-container {
       padding: 1rem;
-padding-bottom: 2rem;
-      height: calc(100vh - 220px); /* adjust based on header height */
+      padding-bottom: 2rem;
+      height: calc(100vh - 220px);
       overflow-y: auto;
     }
     .grid {
@@ -79,12 +79,10 @@ padding-bottom: 2rem;
         <small class="text-secondary">Logged in as: <span id="userEmailUser"></span></small>
         <button id="logoutBtnUser" class="btn btn-outline-secondary btn-sm">Logout</button>
       </div>
-
-<div class="text-start mb-2 px-3">
-  <p class="mb-1">KPMG K1 Team Building Game</p>
-  <p class="mb-0">Choose your luck</p>
-</div>
-
+      <div class="text-start mb-2 px-3">
+        <p class="mb-1">KPMG K1 Team Building Game</p>
+        <p class="mb-0">Choose your luck</p>
+      </div>
       <div class="d-flex justify-content-between align-items-center">
         <p id="gameStatus" class="election-sub mb-0">Loading status…</p>
         <button id="clearBtn" class="btn btn-vote btn-sm">Clear Selection</button>
@@ -102,10 +100,10 @@ padding-bottom: 2rem;
         <small class="text-secondary">Logged in as: <span id="userEmailAdmin"></span></small>
         <button id="logoutBtnAdmin" class="btn btn-outline-secondary btn-sm">Logout</button>
       </div>
-<div class="text-start mb-2 px-3">
-  <p class="mb-1">KPMG K1 Team Building Game</p>
-  <p class="mb-0">Choose your luck</p>
-</div>
+      <div class="text-start mb-2 px-3">
+        <p class="mb-1">KPMG K1 Team Building Game</p>
+        <p class="mb-0">Choose your luck</p>
+      </div>
       <div class="d-flex justify-content-between align-items-center">
         <p id="adminStatus" class="election-sub mb-0">Loading status…</p>
         <button id="toggleGameBtn" class="btn btn-change btn-sm">Open Game</button>
@@ -121,7 +119,7 @@ padding-bottom: 2rem;
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js';
     import {
       getFirestore, collection, doc, onSnapshot,
-      setDoc, deleteDoc, getDoc, query, where, getDocs, serverTimestamp
+      setDoc, deleteDoc, getDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js';
 
     const app = initializeApp({
@@ -134,7 +132,7 @@ padding-bottom: 2rem;
     });
     const db = getFirestore(app);
 
-    const allowed = [
+    const allowed     = [
       "nopparatb@kpmg.co.th","theerawatj@kpmg.co.th","palidal@kpmg.co.th",
       "manitan@kpmg.co.th","sudaratr@kpmg.co.th","chanaratc@kpmg.co.th",
       "pornthipr@kpmg.co.th","gameadmin@kpmg.co.th"
@@ -160,64 +158,89 @@ padding-bottom: 2rem;
     const picksCol    = collection(db,'lotto');
 
     function reset(){
-      email='';
+      email = '';
       loginDiv.classList.remove('d-none');
       userDiv.classList.add('d-none');
       adminDiv.classList.add('d-none');
-      document.getElementById('emailInput').value='';
+      document.getElementById('emailInput').value = '';
     }
-    logoutUser.onclick=reset;
-    logoutAdmin.onclick=reset;
+    logoutUser.onclick  = reset;
+    logoutAdmin.onclick = reset;
 
     document.getElementById('loginForm').onsubmit = e => {
       e.preventDefault();
       const val = document.getElementById('emailInput').value.trim().toLowerCase();
-      if(!allowed.includes(val)) return alert('Access denied.');
-      email = val;
-      isAdmin = adminEmails.includes(val);
-      userEmailUser.textContent  = val;
+      if (!allowed.includes(val)) return alert('Access denied.');
+      email      = val;
+      isAdmin    = adminEmails.includes(val);
+      userEmailUser .textContent = val;
       userEmailAdmin.textContent = val;
-      loginDiv.classList.add('d-none');
-      (isAdmin?adminDiv:userDiv).classList.remove('d-none');
-      listenGame(); listenPicks();
+      loginDiv     .classList.add('d-none');
+      (isAdmin ? adminDiv : userDiv).classList.remove('d-none');
+      listenGame();
+      listenPicks();
     };
 
-    function listenGame(){ onSnapshot(settingsRef, snap=>{
-      gameOpen = snap.exists()&&snap.data().open;
-      gameStatusEl.textContent  = gameOpen? '🎲 Game is OPEN':'🔒 Game is CLOSED';
-      adminStatusEl.textContent = gameOpen? 'Game OPEN':'Game CLOSED';
-      toggleBtn.textContent     = gameOpen? 'Close Game':'Open Game';
-      renderGrid();
-    }); }
+    function listenGame(){
+      onSnapshot(settingsRef, snap => {
+        gameOpen           = snap.exists() && snap.data().open;
+        gameStatusEl.textContent = gameOpen ? '🎲 Game is OPEN' : '🔒 Game is CLOSED';
+        adminStatusEl.textContent= gameOpen ? 'Game OPEN' : 'Game CLOSED';
+        toggleBtn.textContent    = gameOpen ? 'Close Game' : 'Open Game';
+        renderGrid();
+      });
+    }
 
-    function listenPicks(){ onSnapshot(picksCol, snap=>{
-      picks = {}; snap.forEach(d=> picks[d.id]=d.data().number);
-      myPick = picks[email]||null;
-      if(myPick) gameStatusEl.textContent = `✅ You picked: ${myPick}`;
-      renderGrid();
-    }); }
+    function listenPicks(){
+      onSnapshot(picksCol, snap => {
+        picks = {};
+        snap.forEach(d => picks[d.id] = d.data().number);
+        myPick = picks[email] || null;
+        if (myPick) gameStatusEl.textContent = `✅ You picked: ${myPick}`;
+        renderGrid();
+      });
+    }
 
     function renderGrid(){
       [gridElUser, gridElAdmin].forEach(gridEl => {
-        if(!gridEl) return;
-        gridEl.innerHTML='';
-        for(let i=1;i<=420;i++){
-          const box=document.createElement('div');
-          box.className='number'; box.textContent=i;
-          const owner=Object.entries(picks).find(([u,n])=>n===i)?.[0];
-          if(owner){ box.classList.add('taken'); if(owner===email) box.classList.add('mine'); }
-          else if(!gameOpen) box.classList.add('disabled');
-          else if(!isAdmin) box.onclick=()=> selectNumber(i);
+        if (!gridEl) return;
+        gridEl.innerHTML = '';
+        for (let i=1; i<=420; i++){
+          const box = document.createElement('div');
+          box.className = 'number';
+          box.textContent = i;
+          const owner = Object.entries(picks).find(([u,n])=>n===i)?.[0];
+          if (owner) {
+            box.classList.add('taken');
+            if (owner === email) box.classList.add('mine');
+          }
+          else if (!gameOpen)    box.classList.add('disabled');
+          else if (!isAdmin)     box.onclick = ()=> selectNumber(i);
           gridEl.appendChild(box);
         }
       });
     }
 
-    async function selectNumber(n){ if(!gameOpen) return; await setDoc(doc(picksCol,email),{number:n}); }
-    clearBtn.onclick = async()=>{ if(!gameOpen) return; await deleteDoc(doc(picksCol,email)); };
-    toggleBtn.onclick= async()=>{ await setDoc(settingsRef,{open:!gameOpen}); };
+    // STORE pick under document ID = email, with timestamp and email
+    async function selectNumber(n){
+      if (!gameOpen) return;
+      await setDoc(doc(picksCol, email), {
+        number: n,
+        email: email,
+        timestamp: serverTimestamp()
+      });
+    }
 
-    window.selectNumber=selectNumber;
+    clearBtn.onclick = async()=>{
+      if (!gameOpen) return;
+      await deleteDoc(doc(picksCol, email));
+    };
+
+    toggleBtn.onclick = async()=>{
+      await setDoc(settingsRef, { open: !gameOpen });
+    };
+
+    window.selectNumber = selectNumber;
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
