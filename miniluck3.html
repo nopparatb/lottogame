@@ -7,58 +7,43 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root {
-      --primary: #4300FF;
-      --accent: #00CAFF;
-    }
+    :root { --primary: #4300FF; --accent: #00CAFF; }
     body {
       background: #f5f7fa;
       color: #333;
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      height: 100vh;
-      overflow: hidden;
+      margin: 0; height: 100vh; overflow: hidden;
     }
-    .election-title { font-size: 1.1rem; font-weight: 600; margin: 0; color: #111; text-align: center; }
-    .election-sub   { font-size: 0.85rem; color: #666; text-align: center; }
+    .election-title { font-size:1.1rem; font-weight:600; margin:0; color:#111; text-align:center }
+    .election-sub   { font-size:.85rem; color:#666; text-align:center }
     .grid-container {
-      padding: 1rem;
-      padding-bottom: 2rem;
-      height: calc(100vh - 220px);
-      overflow-y: auto;
+      padding:1rem; padding-bottom:2rem;
+      height:calc(100vh - 290px); overflow-y:auto;
     }
     .grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
     }
     .number {
-      padding: 8px;
-      background: #fff;
-      border: 1px solid #ddd;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 4px;
-      user-select: none;
+      padding:8px; background:#fff; border:1px solid #ddd;
+      text-align:center; cursor:pointer; border-radius:4px; user-select:none;
     }
-    .number.taken    { background-color: #ff9999; cursor: not-allowed; }
-    .number.mine     { background-color: #90ee90; cursor: not-allowed; }
-    .number.disabled { background-color: #eee; cursor: not-allowed; }
-    .btn-vote   { background: var(--primary); color: #fff; border: none; }
-    .btn-change { background: var(--accent);  color: #fff; border: none; }
+    .number.taken    { background:#ff9999; cursor:not-allowed }
+    .number.mine     { background:#90ee90; cursor:not-allowed }
+    .number.disabled { background:#eee;    cursor:not-allowed }
+    .btn-vote   { background:var(--primary); color:#fff; border:none }
+    .btn-change { background:var(--accent);  color:#fff; border:none }
     .sticky-header {
-      position: sticky;
-      top: 0;
-      background: #f5f7fa;
-      z-index: 1000;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #ddd;
+      position:sticky; top:0; background:#f5f7fa; z-index:1000;
+      padding:.75rem 1rem; border-bottom:1px solid #ddd;
     }
-    .d-none { display: none !important; }
+    #searchContainer { padding:.5rem 1rem; background:#fff; border-bottom:1px solid #ddd; }
+    .stats-row { display:flex; justify-content:space-around; padding:.5rem 1rem; background:#fff; border-bottom:1px solid #ddd; }
+    .stats-row div { text-align:center }
+    .d-none { display:none!important }
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
+  <!-- Login -->
   <div id="loginDiv" class="container py-4">
     <div class="card p-4">
       <p class="election-title">🎯 KPMG K1 Choose My Luck</p>
@@ -72,7 +57,7 @@
     </div>
   </div>
 
-  <!-- User Screen -->
+  <!-- User -->
   <div id="userDiv" class="container-fluid h-100 d-none p-0">
     <div class="sticky-header">
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -83,17 +68,15 @@
         <p class="mb-1">KPMG K1 Team Building Game</p>
         <p class="mb-0">Choose your luck</p>
       </div>
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center mb-2">
         <p id="gameStatus" class="election-sub mb-0">Loading status…</p>
         <button id="clearBtn" class="btn btn-vote btn-sm">Clear Selection</button>
       </div>
     </div>
-    <div class="grid-container">
-      <div id="grid" class="grid"></div>
-    </div>
+    <div class="grid-container"><div id="grid" class="grid"></div></div>
   </div>
 
-  <!-- Admin Screen -->
+  <!-- Admin -->
   <div id="adminDiv" class="container-fluid h-100 d-none p-0">
     <div class="sticky-header">
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -104,24 +87,39 @@
         <p class="mb-1">KPMG K1 Team Building Game</p>
         <p class="mb-0">Choose your luck</p>
       </div>
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center mb-2">
         <p id="adminStatus" class="election-sub mb-0">Loading status…</p>
-        <button id="toggleGameBtn" class="btn btn-change btn-sm">Open Game</button>
+        <div>
+          <button id="toggleGameBtn" class="btn btn-change btn-sm">Open Game</button>
+          <button id="resetGameBtn"  class="btn btn-change btn-sm ms-2">Reset Game</button>
+        </div>
+      </div>
+      <div id="statsRow" class="stats-row d-none">
+        <div>Total Players<br><strong><span id="totalPlayers">0</span></strong></div>
+        <div>Selected<br><strong><span id="totalSelected">0</span> (<span id="percentSelected">0</span>%)</strong></div>
+        <div>Unselected<br><strong><span id="totalUnselected">0</span> (<span id="percentUnselected">0</span>%)</strong></div>
       </div>
     </div>
-    <div class="grid-container">
-      <div id="grid" class="grid"></div>
+    <div id="searchContainer" class="d-none">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by email or number">
+        <button id="searchBtn" class="btn btn-vote">Search</button>
+      </div>
+      <div id="searchResult" class="mt-2"></div>
     </div>
+    <div class="grid-container"><div id="grid" class="grid"></div></div>
   </div>
 
-  <!-- Firebase & Logic -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js';
     import {
-      getFirestore, collection, doc, onSnapshot,
-      setDoc, deleteDoc, getDoc, serverTimestamp
+      getFirestore, collection, doc,
+      onSnapshot, setDoc, deleteDoc,
+      getDoc, getDocs, query, where,
+      serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js';
 
+    // Init Firebase
     const app = initializeApp({
       apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
       authDomain: "lottogame-16083.firebaseapp.com",
@@ -138,109 +136,176 @@
       "pornthipr@kpmg.co.th","gameadmin@kpmg.co.th"
     ];
     const adminEmails = ["gameadmin@kpmg.co.th"];
-    let email = '', isAdmin = false, gameOpen = false, picks = {}, myPick = null;
 
-    const loginDiv       = document.getElementById('loginDiv');
-    const userDiv        = document.getElementById('userDiv');
-    const adminDiv       = document.getElementById('adminDiv');
-    const userEmailUser  = document.getElementById('userEmailUser');
-    const userEmailAdmin = document.getElementById('userEmailAdmin');
-    const logoutUser     = document.getElementById('logoutBtnUser');
-    const logoutAdmin    = document.getElementById('logoutBtnAdmin');
-    const gameStatusEl   = document.getElementById('gameStatus');
-    const adminStatusEl  = document.getElementById('adminStatus');
-    const gridElUser     = document.querySelector('#userDiv #grid');
-    const gridElAdmin    = document.querySelector('#adminDiv #grid');
-    const toggleBtn      = document.getElementById('toggleGameBtn');
-    const clearBtn       = document.getElementById('clearBtn');
+    let email='', isAdmin=false, gameOpen=false, picks={};
 
-    const settingsRef = doc(db,'settings','game');
-    const picksCol    = collection(db,'lotto');
+    // Elements
+    const loginDiv=document.getElementById('loginDiv'),
+          userDiv=document.getElementById('userDiv'),
+          adminDiv=document.getElementById('adminDiv'),
+          userEmailUser=document.getElementById('userEmailUser'),
+          userEmailAdmin=document.getElementById('userEmailAdmin'),
+          logoutUser=document.getElementById('logoutBtnUser'),
+          logoutAdmin=document.getElementById('logoutBtnAdmin'),
+          gameStatusEl=document.getElementById('gameStatus'),
+          adminStatusEl=document.getElementById('adminStatus'),
+          gridElUser=document.querySelector('#userDiv #grid'),
+          gridElAdmin=document.querySelector('#adminDiv #grid'),
+          toggleBtn=document.getElementById('toggleGameBtn'),
+          clearBtn=document.getElementById('clearBtn'),
+          resetGameBtn=document.getElementById('resetGameBtn'),
+          statsRow=document.getElementById('statsRow'),
+          tpEl=document.getElementById('totalPlayers'),
+          tsEl=document.getElementById('totalSelected'),
+          tuEl=document.getElementById('totalUnselected'),
+          psEl=document.getElementById('percentSelected'),
+          puEl=document.getElementById('percentUnselected'),
+          searchContainer=document.getElementById('searchContainer'),
+          searchInput=document.getElementById('searchInput'),
+          searchBtn=document.getElementById('searchBtn'),
+          searchResult=document.getElementById('searchResult');
 
-    function reset(){
-      email = '';
-      loginDiv.classList.remove('d-none');
+    const settingsRef=doc(db,'settings','game'),
+          picksCol=collection(db,'lotto');
+
+    // Logout
+    logoutUser.onclick=logoutAdmin.onclick=()=>{
+      email=''; loginDiv.classList.remove('d-none');
       userDiv.classList.add('d-none');
       adminDiv.classList.add('d-none');
-      document.getElementById('emailInput').value = '';
-    }
-    logoutUser.onclick  = reset;
-    logoutAdmin.onclick = reset;
-
-    document.getElementById('loginForm').onsubmit = e => {
-      e.preventDefault();
-      const val = document.getElementById('emailInput').value.trim().toLowerCase();
-      if (!allowed.includes(val)) return alert('Access denied.');
-      email      = val;
-      isAdmin    = adminEmails.includes(val);
-      userEmailUser .textContent = val;
-      userEmailAdmin.textContent = val;
-      loginDiv     .classList.add('d-none');
-      (isAdmin ? adminDiv : userDiv).classList.remove('d-none');
-      listenGame();
-      listenPicks();
     };
 
+    // Login
+    document.getElementById('loginForm').onsubmit=e=>{
+      e.preventDefault();
+      const v=document.getElementById('emailInput').value.trim().toLowerCase();
+      if(!allowed.includes(v)) return alert('Access denied.');
+      email=v; isAdmin=adminEmails.includes(v);
+      userEmailUser.textContent=v;
+      userEmailAdmin.textContent=v;
+      loginDiv.classList.add('d-none');
+      (isAdmin? adminDiv:userDiv).classList.remove('d-none');
+      listenGame(); listenPicks();
+    };
+
+    // Listen game
     function listenGame(){
-      onSnapshot(settingsRef, snap => {
-        gameOpen           = snap.exists() && snap.data().open;
-        gameStatusEl.textContent = gameOpen ? '🎲 Game is OPEN' : '🔒 Game is CLOSED';
-        adminStatusEl.textContent= gameOpen ? 'Game OPEN' : 'Game CLOSED';
-        toggleBtn.textContent    = gameOpen ? 'Close Game' : 'Open Game';
+      onSnapshot(settingsRef,snap=>{
+        gameOpen=snap.exists()&&snap.data().open;
+        gameStatusEl.textContent=gameOpen?'🎲 Game is OPEN':'🔒 Game is CLOSED';
+        adminStatusEl.textContent=gameOpen?'Game OPEN':'Game CLOSED';
+        toggleBtn.textContent=gameOpen?'Close Game':'Open Game';
         renderGrid();
+        if(!gameOpen&&isAdmin){
+          searchContainer.classList.remove('d-none');
+          statsRow.classList.remove('d-none');
+          updateStats();
+          searchResult.textContent=''; searchInput.value='';
+        } else {
+          searchContainer.classList.add('d-none');
+          statsRow.classList.add('d-none');
+        }
       });
     }
 
+    // Listen picks
     function listenPicks(){
-      onSnapshot(picksCol, snap => {
-        picks = {};
-        snap.forEach(d => picks[d.id] = d.data().number);
-        myPick = picks[email] || null;
-        if (myPick) gameStatusEl.textContent = `✅ You picked: ${myPick}`;
+      onSnapshot(picksCol,snap=>{
+        picks={};
+        snap.forEach(d=>picks[d.id]=d.data().number);
+        if(!gameOpen) updateStats();
         renderGrid();
       });
     }
 
+    // Update stats
+    function updateStats(){
+      const tot=allowed.length,
+            sel=Object.keys(picks).filter(u=>allowed.includes(u)).length,
+            uns=tot-sel,
+            pct=n=>tot?Math.round(n/tot*100):0;
+      tpEl.textContent=tot;
+      tsEl.textContent=sel;
+      tuEl.textContent=uns;
+      psEl.textContent=pct(sel);
+      puEl.textContent=pct(uns);
+    }
+
+    // Render grid with tooltip for admin
     function renderGrid(){
-      [gridElUser, gridElAdmin].forEach(gridEl => {
-        if (!gridEl) return;
-        gridEl.innerHTML = '';
-        for (let i=1; i<=420; i++){
-          const box = document.createElement('div');
-          box.className = 'number';
-          box.textContent = i;
-          const owner = Object.entries(picks).find(([u,n])=>n===i)?.[0];
-          if (owner) {
+      [gridElUser,gridElAdmin].forEach(gridEl=>{
+        if(!gridEl) return;
+        gridEl.innerHTML='';
+        for(let i=1;i<=420;i++){
+          const box=document.createElement('div');
+          box.className='number'; box.textContent=i;
+          const owner=Object.entries(picks).find(([u,n])=>n===i)?.[0];
+          if(owner){
             box.classList.add('taken');
-            if (owner === email) box.classList.add('mine');
+            if(owner===email) box.classList.add('mine');
+            if(isAdmin&&gridEl===gridElAdmin){
+              box.title=owner;
+            }
+          } else if(!gameOpen){
+            box.classList.add('disabled');
+          } else if(!isAdmin){
+            box.onclick=()=> selectNumber(i);
           }
-          else if (!gameOpen)    box.classList.add('disabled');
-          else if (!isAdmin)     box.onclick = ()=> selectNumber(i);
           gridEl.appendChild(box);
         }
       });
     }
 
-    // STORE pick under document ID = email, with timestamp and email
+    // Select & clear
     async function selectNumber(n){
-      if (!gameOpen) return;
-      await setDoc(doc(picksCol, email), {
-        number: n,
-        email: email,
-        timestamp: serverTimestamp()
-      });
+      if(!gameOpen) return;
+      await setDoc(doc(picksCol,email),{number:n,email,timestamp:serverTimestamp()});
     }
-
-    clearBtn.onclick = async()=>{
-      if (!gameOpen) return;
-      await deleteDoc(doc(picksCol, email));
+    clearBtn.onclick=async()=>{
+      if(!gameOpen) return;
+      await deleteDoc(doc(picksCol,email));
+    };
+    toggleBtn.onclick=async()=>{
+      await setDoc(settingsRef,{open:!gameOpen});
     };
 
-    toggleBtn.onclick = async()=>{
-      await setDoc(settingsRef, { open: !gameOpen });
+    // Reset game
+    resetGameBtn.onclick=async()=>{
+      const key=prompt('Type "reset" to confirm:');
+      if(key!=='reset'){ alert('Cancelled'); return; }
+      const snap=await getDocs(picksCol);
+      await Promise.all(snap.docs.map(d=>deleteDoc(d.ref)));
+      alert('All picks cleared.');
     };
 
-    window.selectNumber = selectNumber;
+    // Search
+    searchBtn.onclick=async()=>{
+      const q=searchInput.value.trim().toLowerCase();
+      if(!q) return;
+      searchResult.textContent='Searching…';
+      if(q.includes('@kpmg.co.th')){
+        if(!allowed.includes(q)){
+          searchResult.textContent='User email is not allowed or is incorrect. Please retry.';
+          return;
+        }
+        const snap=await getDoc(doc(picksCol,q));
+        searchResult.textContent=snap.exists()
+          ?`${q} picked number ${snap.data().number}.`
+          :`${q} has not selected any number.`;
+      } else {
+        const num=parseInt(q,10);
+        if(isNaN(num)){
+          searchResult.textContent='Enter a valid email or number.'; return;
+        }
+        const qSnap=await getDocs(query(picksCol,where('number','==',num)));
+        if(qSnap.empty){
+          searchResult.textContent=`No one picked number ${num}.`;
+        } else {
+          const emails=qSnap.docs.map(d=>d.id).join(', ');
+          searchResult.textContent=`${emails} picked number ${num}.`;
+        }
+      }
+    };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
