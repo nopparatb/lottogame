@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KPMG K1 Lucky Draw</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at center, #e0f7fa 0%, #ffffff 100%);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #0065F8;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+
+    .slot-box {
+      display: flex;
+      gap: 20px;
+      background: #ffffff;
+      border: 6px solid #0065F8;
+      border-radius: 20px;
+      padding: 30px 40px;
+      box-shadow: 0 0 30px rgba(0, 101, 248, 0.2);
+      margin-bottom: 30px;
+    }
+
+    .digit {
+      font-size: 5rem;
+      width: 90px;
+      height: 120px;
+      background: #f8f8f8;
+      border: 4px solid #00CAFF;
+      border-radius: 12px;
+      text-align: center;
+      line-height: 120px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .digit.spin {
+      animation: roll 0.5s ease-in-out infinite;
+    }
+
+    @keyframes roll {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+
+    #spinBtn {
+      font-size: 1.5rem;
+      padding: 16px 36px;
+      background: #FF0077;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,0,119,0.3);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    #spinBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .header-icons {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .icon-button:hover {
+      color: #00CAFF;
+    }
+
+    .settings-panel {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #ffffff;
+      border: 2px solid #00CAFF;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 99;
+    }
+
+    .settings-panel input {
+      width: 80px;
+      padding: 4px;
+      margin: 5px 0;
+    }
+
+    .settings-panel label {
+      font-size: 0.95rem;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🤑KPMG K1 Lucky Draw🤑</h1>
+
+  <div class="slot-box">
+    <div class="digit" id="digit1">0</div>
+    <div class="digit" id="digit2">0</div>
+    <div class="digit" id="digit3">0</div>
+  </div>
+
+  <button id="spinBtn">🎉 SPIN NOW!</button>
+
+  <div class="header-icons">
+    <button class="icon-button" id="resetBtn" title="Reset">🔄</button>
+    <button class="icon-button" id="toggleSettings" title="Settings">⚙️</button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <label for="rateInput">Spin Rate (ms):</label><br>
+    <input type="number" id="rateInput" value="30"><br>
+    <label for="delayInput">Spin Duration (ms per digit):</label><br>
+    <input type="number" id="delayInput" value="300"><br>
+    <label for="maxInput">Max Number (0–999):</label><br>
+    <input type="number" id="maxInput" value="999"><br>
+    <button id="saveSettingsBtn">Save</button>
+  </div>
+
+  <div class="footer">🎉Wish you best of luck🎉</div>
+
+  <audio id="tickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_9a801a8e90.mp3" preload="auto"></audio>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import {
+      getFirestore, doc, setDoc, onSnapshot
+    } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const app = initializeApp({
+      apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
+      authDomain: "lottogame-16083.firebaseapp.com",
+      projectId: "lottogame-16083",
+      storageBucket: "lottogame-16083.appspot.com",
+      messagingSenderId: "278778623701",
+      appId: "1:278778623701:web:c7828b036c617a13fa145c"
+    });
+
+    const db = getFirestore(app);
+
+    const digits = [
+      document.getElementById('digit1'),
+      document.getElementById('digit2'),
+      document.getElementById('digit3')
+    ];
+
+    const spinBtn = document.getElementById('spinBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const toggleSettings = document.getElementById('toggleSettings');
+    const settingsPanel = document.getElementById('settingsPanel');
+
+    const maxInput = document.getElementById('maxInput');
+    const rateInput = document.getElementById('rateInput');
+    const delayInput = document.getElementById('delayInput');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const tickSound = document.getElementById('tickSound');
+
+    let spinRate = 30;
+    let spinDelay = 300;
+    let maxNumber = 999;
+
+    toggleSettings.addEventListener('click', () => {
+      settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    resetBtn.addEventListener('click', async () => {
+      await setDoc(doc(db, "slot_results", "current"), {
+        number: "000",
+        timestamp: Date.now()
+      });
+    });
+
+    saveSettingsBtn.addEventListener('click', async () => {
+      spinRate = parseInt(rateInput.value);
+      spinDelay = parseInt(delayInput.value);
+      maxNumber = parseInt(maxInput.value);
+
+      await setDoc(doc(db, "settings", "global"), {
+        rate: spinRate,
+        delay: spinDelay,
+        maxNumber: maxNumber
+      });
+    });
+
+    function loadSettingsFromFirebase() {
+      const settingsRef = doc(db, "settings", "global");
+      onSnapshot(settingsRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          spinRate = data.rate ?? 30;
+          spinDelay = data.delay ?? 300;
+          maxNumber = data.maxNumber ?? 999;
+          rateInput.value = spinRate;
+          delayInput.value = spinDelay;
+          maxInput.value = maxNumber;
+        } else {
+          setDoc(settingsRef, {
+            rate: 30,
+            delay: 300,
+            maxNumber: 999
+          });
+        }
+      });
+    }
+
+    function getRandom3Digit() {
+      return Math.floor(Math.random() * (maxNumber + 1)).toString().padStart(3, '0');
+    }
+
+    spinBtn.addEventListener('click', async () => {
+      const number = getRandom3Digit();
+      await setDoc(doc(db, "slot_results", "current"), {
+        number,
+        timestamp: Date.now()
+      });
+    });
+
+    async function animateDigits(finalNumber) {
+      spinBtn.disabled = true;
+      const finalDigits = finalNumber.split('');
+
+      for (let i = 0; i < digits.length; i++) {
+        await spinDigit(digits[i], finalDigits[i]);
+      }
+
+      spinBtn.disabled = false;
+    }
+
+    function spinDigit(el, target) {
+      return new Promise((resolve) => {
+        el.classList.add('spin');
+        const startTime = Date.now();
+
+        const interval = setInterval(() => {
+          tickSound.currentTime = 0;
+          tickSound.play();
+          el.textContent = Math.floor(Math.random() * 10);
+
+          if (Date.now() - startTime >= spinDelay) {
+            clearInterval(interval);
+            el.textContent = target;
+            el.classList.remove('spin');
+            resolve();
+          }
+        }, spinRate);
+      });
+    }
+
+    function listenToResult() {
+      const docRef = doc(db, "slot_results", "current");
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.number === "000") {
+            // Show directly with no animation
+            digits[0].textContent = "0";
+            digits[1].textContent = "0";
+            digits[2].textContent = "0";
+          } else {
+            animateDigits(data.number);
+          }
+        }
+      });
+    }
+
+    loadSettingsFromFirebase();
+    listenToResult();
+  </script>
+</body>
+</html>
