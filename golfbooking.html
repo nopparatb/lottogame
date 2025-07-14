@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Room Booking App</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .card {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .seat {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100px;
+      min-height: 50px;
+      padding: 0 8px;
+      margin: 4px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+    .seat.available {
+      background-color: #198754;
+      color: #fff;
+      cursor: pointer;
+    }
+    .seat.taken {
+      background-color: #6c757d;
+      color: #fff;
+      cursor: default;
+    }
+    .seat.me {
+      border: 2px solid #0d6efd;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+
+    <!-- Email Input Screen -->
+    <div id="auth-screen" class="card mx-auto p-4" style="max-width: 400px;">
+      <h5 class="text-center mb-3">Room Booking Login</h5>
+      <form id="login-form">
+        <div class="mb-3">
+          <input type="email" id="email" class="form-control" placeholder="you@kpmg.co.th" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+      </form>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen" class="d-none">
+
+      <!-- Header + Logout -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="m-0">Room Booking</h3>
+        <button id="logout-btn" class="btn btn-outline-secondary">Logout</button>
+      </div>
+
+      <!-- Admin Controls -->
+      <div id="admin-controls" class="card mb-4 d-none p-3">
+        <h5 class="mb-3">Add Room & Time Slot</h5>
+        <form id="add-slot-form" class="row g-2 align-items-end">
+          <div class="col-sm-5">
+            <input type="text" id="room-name" class="form-control" placeholder="Room Name" required />
+          </div>
+          <div class="col-sm-3">
+            <input type="time" id="slot-time" class="form-control" required />
+          </div>
+          <div class="col-sm-3">
+            <input type="number" id="slot-capacity" class="form-control" min="1" value="1" required />
+          </div>
+          <div class="col-sm-1 d-grid">
+            <button type="submit" class="btn btn-success">Add</button>
+          </div>
+        </form>
+        <button id="toggle-reg-btn" class="btn btn-outline-primary mt-3">Loading…</button>
+
+        <!-- Manage existing slots -->
+        <div id="admin-slots-list" class="mt-4">
+          <h5 class="mb-3">Manage Slots</h5>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Time</th>
+                <th>Capacity</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-slots-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Booking Slots -->
+      <div id="slots-container" class="row gy-4"></div>
+
+      <!-- Admin Report -->
+      <div id="admin-report" class="card mt-5 d-none p-3">
+        <h5 class="mb-3">Booking Summary</h5>
+        <button id="export-btn" class="btn btn-outline-primary mb-3">Export CSV</button>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Room</th><th>Time</th><th>Email</th></tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Firebase init
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
+      authDomain: "lottogame-16083.firebaseapp.com",
+      projectId: "lottogame-16083",
+      storageBucket: "lottogame-16083.appspot.com",
+      messagingSenderId: "278778623701",
+      appId: "1:278778623701:web:c7828b036c617a13fa145c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const adminEmail = 'admin@kpmg.co.th';
+    let currentUser = null;
+    let slotsData = [], bookingsData = [], regOpen = true;
+
+    // DOM refs
+    const authScreen      = document.getElementById('auth-screen');
+    const loginForm       = document.getElementById('login-form');
+    const emailInput      = document.getElementById('email');
+    const appScreen       = document.getElementById('app-screen');
+    const logoutBtn       = document.getElementById('logout-btn');
+    const adminControls   = document.getElementById('admin-controls');
+    const toggleRegBtn    = document.getElementById('toggle-reg-btn');
+    const addSlotForm     = document.getElementById('add-slot-form');
+    const roomNameInput   = document.getElementById('room-name');
+    const slotTimeInput   = document.getElementById('slot-time');
+    const slotCapacityInput = document.getElementById('slot-capacity');
+    const slotsContainer  = document.getElementById('slots-container');
+    const adminReport     = document.getElementById('admin-report');
+    const reportBody      = document.getElementById('report-body');
+    const exportBtn       = document.getElementById('export-btn');
+    const adminSlotsBody  = document.getElementById('admin-slots-body');
+
+    // Login
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = emailInput.value.trim().toLowerCase();
+      if (!email.endsWith('@kpmg.co.th')) {
+        return alert('Email must end with @kpmg.co.th');
+      }
+      currentUser = email;
+      authScreen.classList.add('d-none');
+      appScreen.classList.remove('d-none');
+      if (currentUser === adminEmail) {
+        adminControls.classList.remove('d-none');
+        adminReport.classList.remove('d-none');
+      }
+      subscribeData();
+    });
+    logoutBtn.addEventListener('click', () => location.reload());
+
+    // Realtime subscriptions
+    function subscribeData() {
+      // slots
+      db.collection('slots').orderBy('room').onSnapshot(snap => {
+        slotsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      });
+
+      // bookings (fixed iterator name)
+      db.collection('bookings').onSnapshot(snap => {
+        bookingsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      });
+
+      // registration flag
+      const regDoc = db.collection('settings').doc('registration');
+      regDoc.onSnapshot(doc => {
+        if (doc.exists) regOpen = doc.data().open;
+        else regDoc.set({ open: true });
+        toggleRegBtn.innerText = regOpen ? 'Close Registration' : 'Open Registration';
+        render();
+      });
+      // bind toggle once
+      toggleRegBtn.addEventListener('click', () => {
+        db.collection('settings').doc('registration').set({ open: !regOpen });
+      });
+    }
+
+    // Admin: add slot
+    addSlotForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const room = roomNameInput.value.trim();
+      const time = slotTimeInput.value;
+      const capacity = parseInt(slotCapacityInput.value, 10);
+      if (!room || !time || capacity < 1) return;
+      db.collection('slots').add({ room, time, capacity });
+      addSlotForm.reset();
+    });
+
+    // Main render
+    function render() {
+      renderSlots();
+      if (currentUser === adminEmail) {
+        renderReport();
+        renderAdminSlots();
+      }
+    }
+
+    // Render user slots
+    function renderSlots() {
+      slotsContainer.innerHTML = '';
+      if (currentUser !== adminEmail && !regOpen) {
+        slotsContainer.innerHTML = `
+          <div class="alert alert-warning text-center w-100 mb-4">
+            Booking is closed, please contact admin
+          </div>`;
+      }
+      const hasBooking = bookingsData.some(b => b.email === currentUser);
+      slotsData.forEach(slot => {
+        const slotBookings  = bookingsData.filter(b => b.slotId === slot.id);
+        const bookedEmails  = slotBookings.map(b => b.email);
+        const userHere      = bookedEmails.includes(currentUser);
+        const isFull        = bookedEmails.length >= slot.capacity;
+
+        let seatsHTML = '<div class="d-flex flex-wrap justify-content-center mb-2">';
+        for (let i = 0; i < slot.capacity; i++) {
+          const occ   = bookedEmails[i] || null;
+          const cls   = occ
+            ? `seat taken${occ===currentUser?' me':''}`
+            : 'seat available';
+          const label = occ ? occ.split('@')[0] : '';
+          seatsHTML  += `<div class="${cls}" title="${occ||'Available'}">${label}</div>`;
+        }
+        seatsHTML += '</div>';
+
+        let action = '';
+        if (currentUser !== adminEmail) {
+          if (userHere) {
+            action = `<button class="btn btn-sm btn-danger w-100 mb-2" data-cancel="${slot.id}">Cancel</button>`;
+          } else if (!hasBooking && !isFull && regOpen) {
+            action = `<button class="btn btn-sm btn-primary w-100 mb-2" data-book="${slot.id}">Book</button>`;
+          } else {
+            const text = !regOpen ? 'Booking Closed' : (hasBooking ? 'Already Booked' : 'Full');
+            action = `<button class="btn btn-sm btn-secondary w-100 mb-2" disabled>${text}</button>`;
+          }
+        }
+
+        const col = document.createElement('div');
+        col.className = 'col-md-4';
+        col.innerHTML = `
+          <div class="card p-3">
+            <h6 class="mb-1">${slot.room}</h6>
+            <small class="text-muted mb-2 d-block">${slot.time}</small>
+            ${seatsHTML}
+            ${action}
+          </div>`;
+        slotsContainer.appendChild(col);
+      });
+
+      // bind user actions
+      if (currentUser !== adminEmail) {
+        document.querySelectorAll('[data-book]').forEach(b =>
+          b.addEventListener('click', () => bookSlot(b.dataset.book))
+        );
+        document.querySelectorAll('[data-cancel]').forEach(b =>
+          b.addEventListener('click', () => cancelBooking(b.dataset.cancel))
+        );
+      }
+    }
+
+    // Render admin slot table with edit/delete & cascading delete
+    function renderAdminSlots() {
+      adminSlotsBody.innerHTML = '';
+      slotsData.forEach(slot => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${slot.room}</td>
+          <td>${slot.time}</td>
+          <td>${slot.capacity}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary me-2" data-edit="${slot.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" data-delete="${slot.id}">Delete</button>
+          </td>`;
+        adminSlotsBody.appendChild(row);
+      });
+
+      // Edit
+      document.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.edit;
+          const s  = slotsData.find(x => x.id === id);
+          const nr = prompt('Room name:', s.room);
+          if (nr===null) return;
+          const nt = prompt('Time:', s.time);
+          if (nt===null) return;
+          const nc = prompt('Capacity:', s.capacity);
+          if (nc===null) return;
+          const cap = parseInt(nc,10);
+          if (!nr||!nt||isNaN(cap)||cap<1) return alert('Invalid values');
+          db.collection('slots').doc(id).update({ room: nr, time: nt, capacity: cap });
+        };
+      });
+
+      // Delete with cascade
+      document.querySelectorAll('[data-delete]').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.delete;
+          const related = bookingsData.filter(b => b.slotId === id);
+          if (related.length > 0) {
+            if (!confirm(
+              `This slot has ${related.length} booking(s).\n` +
+              `Deleting it will remove ALL those bookings. Continue?`
+            )) return;
+            const batch = db.batch();
+            related.forEach(b => {
+              batch.delete(db.collection('bookings').doc(b.id));
+            });
+            batch.delete(db.collection('slots').doc(id));
+            await batch.commit();
+          } else {
+            if (!confirm('Delete this slot?')) return;
+            await db.collection('slots').doc(id).delete();
+          }
+        };
+      });
+    }
+
+    // booking logic
+    async function bookSlot(id) {
+      if (bookingsData.some(b => b.email === currentUser)) return;
+      const slot = slotsData.find(s => s.id === id);
+      if (bookingsData.filter(b => b.slotId === id).length >= slot.capacity) {
+        return alert('Slot is full');
+      }
+      await db.collection('bookings').doc(`${id}_${currentUser}`)
+        .set({ slotId: id, email: currentUser });
+    }
+    async function cancelBooking(id) {
+      await db.collection('bookings').doc(`${id}_${currentUser}`).delete();
+    }
+
+    // admin report
+    function renderReport() {
+      reportBody.innerHTML = '';
+      bookingsData.forEach(b => {
+        const s = slotsData.find(x => x.id === b.slotId);
+        if (!s) return;
+        reportBody.innerHTML += `
+          <tr>
+            <td>${s.room}</td>
+            <td>${s.time}</td>
+            <td>${b.email}</td>
+          </tr>`;
+      });
+    }
+
+    // export CSV
+    exportBtn.addEventListener('click', () => {
+      let csv = 'Room,Time,Email\n';
+      reportBody.querySelectorAll('tr').forEach(r => {
+        const cols = Array.from(r.children).map(td => td.innerText);
+        csv += cols.join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type:'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href = url; a.download = 'booking_summary.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
