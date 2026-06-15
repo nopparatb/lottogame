@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KPMG K1 Fastest Hand Raise</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa, #eef1ff);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .app-container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .card {
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .brand-title {
+      color: #4300FF;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background-color: #4300FF;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #3000c7;
+    }
+
+    .btn-big-tap {
+      width: 100%;
+      min-height: 190px;
+      border-radius: 1.25rem;
+      font-size: 2rem;
+      font-weight: 700;
+      background: #4300FF;
+      color: white;
+      border: none;
+      box-shadow: 0 8px 20px rgba(67, 0, 255, 0.25);
+      transition: transform 0.08s ease, opacity 0.2s ease;
+    }
+
+    .btn-big-tap:active {
+      transform: scale(0.97);
+    }
+
+    .btn-big-tap:disabled {
+      background: #b8b8c8;
+      box-shadow: none;
+      opacity: 0.85;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .status-open {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .status-closed {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .rank-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .rank-1 { background: #f59e0b; }
+    .rank-2 { background: #64748b; }
+    .rank-3 { background: #b45309; }
+
+    .small-muted {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .d-none {
+      display: none !important;
+    }
+
+    .admin-note {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .round-box {
+      background: #f8fafc;
+      border-radius: 0.9rem;
+      padding: 0.9rem 1rem;
+    }
+
+    .session-text {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      word-break: break-all;
+    }
+
+    /* Big Screen Display */
+    .display-screen {
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #4300FF 0%, #1e1b4b 45%, #020617 100%);
+      color: white;
+      padding: 3rem;
+    }
+
+    .display-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4rem;
+    }
+
+    .display-label {
+      font-size: 1.5rem;
+      color: #c4b5fd;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .display-header h1 {
+      font-size: 5rem;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .display-status {
+      font-size: 2rem;
+      font-weight: 700;
+      padding: 1rem 2rem;
+      border-radius: 999px;
+    }
+
+    .display-open {
+      background: #22c55e;
+      color: #052e16;
+    }
+
+    .display-closed {
+      background: #ef4444;
+      color: #450a0a;
+    }
+
+    .display-main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .display-main h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .display-ranking {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .display-row {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 1.5rem;
+      padding: 1.5rem 2rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .display-rank {
+      width: 80px;
+      height: 80px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      font-weight: 900;
+      margin-right: 2rem;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .display-rank-1 { background: #f59e0b; }
+    .display-rank-2 { background: #94a3b8; }
+    .display-rank-3 { background: #b45309; }
+
+    .display-email {
+      font-size: 2.2rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .display-time {
+      font-size: 1.2rem;
+      color: #cbd5e1;
+      margin-top: 0.25rem;
+    }
+
+    .display-empty {
+      text-align: center;
+      font-size: 2rem;
+      color: #cbd5e1;
+      margin-top: 4rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 0.75rem;
+      }
+
+      .btn-big-tap {
+        min-height: 180px;
+        font-size: 1.7rem;
+      }
+
+      .brand-title {
+        font-size: 1.35rem;
+      }
+
+      .display-screen {
+        padding: 1.5rem;
+      }
+
+      .display-header {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+      }
+
+      .display-header h1 {
+        font-size: 3rem;
+      }
+
+      .display-main h2 {
+        font-size: 2.2rem;
+      }
+
+      .display-email {
+        font-size: 1.4rem;
+      }
+
+      .display-rank {
+        width: 56px;
+        height: 56px;
+        font-size: 1.7rem;
+        margin-right: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container" id="mainApp">
+
+    <!-- Login Card -->
+    <div id="loginCard" class="card p-4 mt-4">
+      <h3 class="brand-title mb-2">Fastest Hand Raise</h3>
+      <p class="text-muted mb-4">
+        Enter your registered email to join the game.
+      </p>
+
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input
+          type="email"
+          id="emailInput"
+          class="form-control form-control-lg"
+          placeholder="name@example.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <button class="btn btn-primary btn-lg w-100" onclick="login()">
+        Login
+      </button>
+
+      <div id="loginMessage" class="mt-3 text-danger small"></div>
+    </div>
+
+    <!-- Main Game Card -->
+    <div id="gameCard" class="card p-4 mt-4 d-none">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h3 class="brand-title mb-1">Fastest Hand Raise</h3>
+          <div class="small-muted">
+            Logged in as <strong id="currentEmail"></strong>
+          </div>
+        </div>
+
+        <button class="btn btn-outline-secondary btn-sm" onclick="logout()">
+          Logout
+        </button>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-4 round-box">
+        <div>
+          <div class="small-muted">Current Round</div>
+          <h4 class="mb-0">Question <span id="roundNo">-</span></h4>
+          <div id="sessionInfo" class="session-text mt-1"></div>
+        </div>
+
+        <div id="gameStatus" class="status-pill status-closed">
+          🔴 Closed
+        </div>
+      </div>
+
+      <button id="tapButton" class="btn-big-tap" onclick="raiseHand()" disabled>
+        Waiting...
+      </button>
+
+      <div id="userMessage" class="mt-3 text-center small-muted"></div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="card p-4 mt-4 d-none">
+      <h4 class="brand-title mb-3">🛠 Admin Control</h4>
+
+      <div class="admin-note mb-3">
+        Admin mode: you can manage the game and view the Top 3 fastest answers.
+        The admin account cannot raise hand.
+      </div>
+
+      <div class="row g-2 mb-4">
+        <div class="col-6">
+          <button class="btn btn-success btn-lg w-100" onclick="openAnswering()">
+            Open
+          </button>
+        </div>
+
+        <div class="col-6">
+          <button class="btn btn-danger btn-lg w-100" onclick="closeAnswering()">
+            Close
+          </button>
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-warning btn-lg w-100" onclick="resetRound()">
+            Reset / Next Question
+          </button>
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-outline-danger btn-lg w-100" onclick="resetRoundNumber()">
+            Reset Round Number to 1 / New Game
+          </button>
+        </div>
+
+        <div class="col-12">
+          <button class="btn btn-dark btn-lg w-100" onclick="openDisplayScreen()">
+            Open Big Screen Display
+          </button>
+        </div>
+      </div>
+
+      <h5 class="mb-3">🏆 Top 3 Fastest</h5>
+      <div id="topThreeList">
+        <div class="text-muted">No answer yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Big Screen Display -->
+  <div id="displayScreen" class="display-screen d-none">
+    <div class="display-header">
+      <div>
+        <div class="display-label">Fastest Hand Raise</div>
+        <h1>Question <span id="displayRoundNo">-</span></h1>
+      </div>
+
+      <div id="displayGameStatus" class="display-status display-closed">
+        🔴 Closed
+      </div>
+    </div>
+
+    <div class="display-main">
+      <h2>🏆 Top 3 Fastest</h2>
+
+      <div id="displayTopThreeList" class="display-ranking">
+        <div class="display-empty">Waiting for answers...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js';
+
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      onSnapshot,
+      query,
+      orderBy,
+      limit,
+      serverTimestamp,
+      runTransaction,
+      increment
+    } from 'https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js';
+
+    const app = initializeApp({
+      apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
+      authDomain: "lottogame-16083.firebaseapp.com",
+      projectId: "lottogame-16083",
+      storageBucket: "lottogame-16083.appspot.com",
+      messagingSenderId: "278778623701",
+      appId: "1:278778623701:web:c7828b036c617a13fa145c"
+    });
+
+    const db = getFirestore(app);
+
+    const ADMIN_EMAIL = "gameadmin@kpmg.co.th";
+    const stateRef = doc(db, "game", "state");
+
+    let currentUserEmail = "";
+    let currentUserIsAdmin = false;
+    let currentSessionId = "";
+    let currentRound = null;
+    let currentOpenStatus = false;
+    let currentUserHasAnswered = false;
+
+    let unsubscribeState = null;
+    let unsubscribeTop3 = null;
+    let unsubscribeMyAnswer = null;
+
+    let unsubscribeDisplayState = null;
+    let unsubscribeDisplayTop3 = null;
+    let displayCurrentSessionId = "";
+    let displayCurrentRound = null;
+
+    function createSessionId() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mi = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      const random = Math.random().toString(36).slice(2, 8);
+      return `session_${yyyy}${mm}${dd}_${hh}${mi}${ss}_${random}`;
+    }
+
+    async function ensureGameState() {
+      const stateSnap = await getDoc(stateRef);
+
+      if (!stateSnap.exists()) {
+        await setDoc(stateRef, {
+          sessionId: createSessionId(),
+          round: 1,
+          open: false,
+          updatedAt: serverTimestamp(),
+          updatedBy: "system"
+        });
+        return;
+      }
+
+      const state = stateSnap.data();
+
+      if (!state.sessionId) {
+        await updateDoc(stateRef, {
+          sessionId: createSessionId(),
+          round: state.round || 1,
+          open: !!state.open,
+          updatedAt: serverTimestamp(),
+          updatedBy: "system"
+        });
+      }
+    }
+
+    window.login = async function () {
+      const input = document.getElementById("emailInput");
+      const message = document.getElementById("loginMessage");
+
+      const email = input.value.trim().toLowerCase();
+      message.textContent = "";
+
+      if (!email) {
+        message.textContent = "Please enter your email.";
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", email);
+        const userSnap = await getDoc(userRef);
+
+        const isAdminEmail = email === ADMIN_EMAIL;
+
+        if (!userSnap.exists() && !isAdminEmail) {
+          message.textContent = "This email is not registered for this game.";
+          return;
+        }
+
+        currentUserEmail = email;
+        currentUserIsAdmin = isAdminEmail;
+
+        localStorage.setItem("k1GameEmail", email);
+
+        document.getElementById("currentEmail").textContent = email;
+        document.getElementById("loginCard").classList.add("d-none");
+        document.getElementById("gameCard").classList.remove("d-none");
+
+        if (currentUserIsAdmin) {
+          document.getElementById("adminPanel").classList.remove("d-none");
+          document.getElementById("tapButton").classList.add("d-none");
+          document.getElementById("userMessage").textContent =
+            "Admin mode: you can manage the game, but cannot raise hand.";
+        } else {
+          document.getElementById("adminPanel").classList.add("d-none");
+          document.getElementById("tapButton").classList.remove("d-none");
+        }
+
+        await ensureGameState();
+        listenToGameState();
+
+      } catch (err) {
+        console.error(err);
+        message.textContent = "Unable to login. Please check connection and try again.";
+      }
+    };
+
+    function listenToGameState() {
+      if (unsubscribeState) unsubscribeState();
+
+      unsubscribeState = onSnapshot(stateRef, (snap) => {
+        if (!snap.exists()) return;
+
+        const state = snap.data();
+
+        const newSessionId = state.sessionId || "";
+        const newRound = state.round || 1;
+        const isOpen = !!state.open;
+
+        const sessionChanged = currentSessionId !== newSessionId;
+        const roundChanged = currentRound !== newRound;
+
+        currentSessionId = newSessionId;
+        currentRound = newRound;
+        currentOpenStatus = isOpen;
+
+        document.getElementById("roundNo").textContent = newRound;
+        document.getElementById("sessionInfo").textContent =
+          currentUserIsAdmin ? `Session: ${newSessionId}` : "";
+
+        const statusEl = document.getElementById("gameStatus");
+
+        if (isOpen) {
+          statusEl.className = "status-pill status-open";
+          statusEl.textContent = "🟢 Open";
+        } else {
+          statusEl.className = "status-pill status-closed";
+          statusEl.textContent = "🔴 Closed";
+        }
+
+        if (sessionChanged || roundChanged) {
+          currentUserHasAnswered = false;
+
+          listenToMyAnswer();
+
+          if (currentUserIsAdmin) {
+            listenToTopThree();
+          }
+        }
+
+        renderUserButton();
+      });
+    }
+
+    function listenToMyAnswer() {
+      if (unsubscribeMyAnswer) unsubscribeMyAnswer();
+
+      if (!currentUserEmail || !currentSessionId || !currentRound || currentUserIsAdmin) {
+        renderUserButton();
+        return;
+      }
+
+      const answerRef = doc(
+        db,
+        "sessions",
+        currentSessionId,
+        "rounds",
+        String(currentRound),
+        "answers",
+        currentUserEmail
+      );
+
+      unsubscribeMyAnswer = onSnapshot(answerRef, (snap) => {
+        currentUserHasAnswered = snap.exists();
+        renderUserButton();
+      });
+    }
+
+    function renderUserButton() {
+      const tapButton = document.getElementById("tapButton");
+      const userMessage = document.getElementById("userMessage");
+
+      if (currentUserIsAdmin) {
+        tapButton.classList.add("d-none");
+        tapButton.disabled = true;
+        userMessage.textContent =
+          "Admin mode: you can manage the game, but cannot raise hand.";
+        return;
+      }
+
+      tapButton.classList.remove("d-none");
+
+      if (!currentSessionId || !currentRound) {
+        tapButton.disabled = true;
+        tapButton.textContent = "Loading...";
+        userMessage.textContent = "";
+        return;
+      }
+
+      if (currentUserHasAnswered) {
+        tapButton.disabled = true;
+        tapButton.textContent = "✅ Answer Submitted";
+        userMessage.textContent = "Your hand raise was recorded for this round.";
+        return;
+      }
+
+      if (currentOpenStatus) {
+        tapButton.disabled = false;
+        tapButton.textContent = "Raise Hand";
+        userMessage.textContent = "Tap as fast as possible when you know the answer.";
+      } else {
+        tapButton.disabled = true;
+        tapButton.textContent = "Waiting for Admin";
+        userMessage.textContent = "The question is currently closed.";
+      }
+    }
+
+    window.raiseHand = async function () {
+      if (!currentUserEmail) return;
+
+      if (currentUserIsAdmin) {
+        alert("Admin cannot raise hand.");
+        return;
+      }
+
+      const tapButton = document.getElementById("tapButton");
+      const userMessage = document.getElementById("userMessage");
+
+      tapButton.disabled = true;
+      tapButton.textContent = "Submitting...";
+
+      try {
+        await runTransaction(db, async (transaction) => {
+          const stateSnap = await transaction.get(stateRef);
+
+          if (!stateSnap.exists()) {
+            throw new Error("Game has not been initialized.");
+          }
+
+          const state = stateSnap.data();
+          const sessionId = state.sessionId;
+          const round = state.round || 1;
+
+          if (!sessionId) {
+            throw new Error("Game session has not been initialized.");
+          }
+
+          if (!state.open) {
+            throw new Error("This question is already closed.");
+          }
+
+          const answerRef = doc(
+            db,
+            "sessions",
+            sessionId,
+            "rounds",
+            String(round),
+            "answers",
+            currentUserEmail
+          );
+
+          const answerSnap = await transaction.get(answerRef);
+
+          if (answerSnap.exists()) {
+            throw new Error("You already raised your hand for this round.");
+          }
+
+          transaction.set(answerRef, {
+            email: currentUserEmail,
+            answeredAt: serverTimestamp()
+          });
+        });
+
+        currentUserHasAnswered = true;
+        tapButton.textContent = "✅ Submitted";
+        userMessage.textContent = "Your hand raise has been recorded.";
+
+      } catch (err) {
+        console.error(err);
+        tapButton.disabled = true;
+        tapButton.textContent = "Not Available";
+        userMessage.textContent = err.message || "Unable to submit.";
+      }
+    };
+
+    function listenToTopThree() {
+      if (unsubscribeTop3) unsubscribeTop3();
+
+      if (!currentSessionId || !currentRound) return;
+
+      const answersCol = collection(
+        db,
+        "sessions",
+        currentSessionId,
+        "rounds",
+        String(currentRound),
+        "answers"
+      );
+
+      const q = query(
+        answersCol,
+        orderBy("answeredAt", "asc"),
+        limit(3)
+      );
+
+      unsubscribeTop3 = onSnapshot(q, (snap) => {
+        const list = document.getElementById("topThreeList");
+        list.innerHTML = "";
+
+        if (snap.empty) {
+          list.innerHTML = '<div class="text-muted">No answer yet.</div>';
+          return;
+        }
+
+        let rank = 1;
+
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+
+          const answeredAt = data.answeredAt && data.answeredAt.toDate
+            ? data.answeredAt.toDate().toLocaleTimeString()
+            : "Pending...";
+
+          const row = document.createElement("div");
+          row.className = "top-row";
+
+          row.innerHTML = `
+            <span class="rank-badge rank-${rank}">${rank}</span>
+            <div>
+              <div><strong>${escapeHtml(data.email || "")}</strong></div>
+              <div class="small-muted">${answeredAt}</div>
+            </div>
+          `;
+
+          list.appendChild(row);
+          rank++;
+        });
+      });
+    }
+
+    window.openAnswering = async function () {
+      if (!currentUserIsAdmin) return;
+
+      await updateDoc(stateRef, {
+        open: true,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail
+      });
+    };
+
+    window.closeAnswering = async function () {
+      if (!currentUserIsAdmin) return;
+
+      await updateDoc(stateRef, {
+        open: false,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail
+      });
+    };
+
+    window.resetRound = async function () {
+      if (!currentUserIsAdmin) return;
+
+      const confirmed = confirm(
+        "Move to the next question? This will close answering and clear the visible ranking for the next round."
+      );
+
+      if (!confirmed) return;
+
+      await updateDoc(stateRef, {
+        round: increment(1),
+        open: false,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail
+      });
+    };
+
+    window.resetRoundNumber = async function () {
+      if (!currentUserIsAdmin) return;
+
+      const confirmed = confirm(
+        "Start a new game session and reset the round number back to 1? Old answers will be kept in the database but will no longer appear."
+      );
+
+      if (!confirmed) return;
+
+      await updateDoc(stateRef, {
+        sessionId: createSessionId(),
+        round: 1,
+        open: false,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail
+      });
+    };
+
+    window.openDisplayScreen = function () {
+      const displayUrl = `${window.location.origin}${window.location.pathname}?screen=display`;
+      window.open(displayUrl, "_blank");
+    };
+
+    function initDisplayScreen() {
+      document.body.style.padding = "0";
+      document.getElementById("mainApp").classList.add("d-none");
+      document.getElementById("displayScreen").classList.remove("d-none");
+
+      listenToDisplayState();
+    }
+
+    function listenToDisplayState() {
+      if (unsubscribeDisplayState) unsubscribeDisplayState();
+
+      unsubscribeDisplayState = onSnapshot(stateRef, (snap) => {
+        if (!snap.exists()) return;
+
+        const state = snap.data();
+
+        const newSessionId = state.sessionId || "";
+        const newRound = state.round || 1;
+        const isOpen = !!state.open;
+
+        const sessionChanged = displayCurrentSessionId !== newSessionId;
+        const roundChanged = displayCurrentRound !== newRound;
+
+        displayCurrentSessionId = newSessionId;
+        displayCurrentRound = newRound;
+
+        document.getElementById("displayRoundNo").textContent = newRound;
+
+        const statusEl = document.getElementById("displayGameStatus");
+
+        if (isOpen) {
+          statusEl.className = "display-status display-open";
+          statusEl.textContent = "🟢 Open";
+        } else {
+          statusEl.className = "display-status display-closed";
+          statusEl.textContent = "🔴 Closed";
+        }
+
+        if (sessionChanged || roundChanged) {
+          listenToDisplayTopThree();
+        }
+      });
+    }
+
+    function listenToDisplayTopThree() {
+      if (unsubscribeDisplayTop3) unsubscribeDisplayTop3();
+
+      if (!displayCurrentSessionId || !displayCurrentRound) return;
+
+      const answersCol = collection(
+        db,
+        "sessions",
+        displayCurrentSessionId,
+        "rounds",
+        String(displayCurrentRound),
+        "answers"
+      );
+
+      const q = query(
+        answersCol,
+        orderBy("answeredAt", "asc"),
+        limit(3)
+      );
+
+      unsubscribeDisplayTop3 = onSnapshot(q, (snap) => {
+        const list = document.getElementById("displayTopThreeList");
+        list.innerHTML = "";
+
+        if (snap.empty) {
+          list.innerHTML = '<div class="display-empty">Waiting for answers...</div>';
+          return;
+        }
+
+        let rank = 1;
+
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+
+          const answeredAt = data.answeredAt && data.answeredAt.toDate
+            ? data.answeredAt.toDate().toLocaleTimeString()
+            : "Pending...";
+
+          const row = document.createElement("div");
+          row.className = "display-row";
+
+          row.innerHTML = `
+            <span class="display-rank display-rank-${rank}">${rank}</span>
+            <div>
+              <div class="display-email">${escapeHtml(data.email || "")}</div>
+              <div class="display-time">${answeredAt}</div>
+            </div>
+          `;
+
+          list.appendChild(row);
+          rank++;
+        });
+      });
+    }
+
+    window.logout = function () {
+      localStorage.removeItem("k1GameEmail");
+
+      if (unsubscribeState) unsubscribeState();
+      if (unsubscribeTop3) unsubscribeTop3();
+      if (unsubscribeMyAnswer) unsubscribeMyAnswer();
+
+      currentUserEmail = "";
+      currentUserIsAdmin = false;
+      currentSessionId = "";
+      currentRound = null;
+      currentOpenStatus = false;
+      currentUserHasAnswered = false;
+
+      document.getElementById("emailInput").value = "";
+      document.getElementById("loginMessage").textContent = "";
+
+      document.getElementById("loginCard").classList.remove("d-none");
+      document.getElementById("gameCard").classList.add("d-none");
+      document.getElementById("adminPanel").classList.add("d-none");
+
+      document.getElementById("topThreeList").innerHTML =
+        '<div class="text-muted">No answer yet.</div>';
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    window.onload = async function () {
+      await ensureGameState();
+
+      const params = new URLSearchParams(window.location.search);
+      const screenMode = params.get("screen");
+
+      if (screenMode === "display") {
+        initDisplayScreen();
+        return;
+      }
+
+      const savedEmail = localStorage.getItem("k1GameEmail");
+
+      if (savedEmail) {
+        document.getElementById("emailInput").value = savedEmail;
+      }
+    };
+  </script>
+</body>
+</html>
