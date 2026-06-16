@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KPMG K1 Karaoke Queue</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root{
+      --primary:#4300FF;
+      --accent:#00CAFF;
+      --bg:#f5f7fa;
+      --card:#ffffff;
+      --border:#dde3ea;
+      --text:#1f2937;
+      --sub:#6b7280;
+      --success:#198754;
+      --danger:#dc3545;
+    }
+
+    html, body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:var(--bg);
+      font-family:"Segoe UI", sans-serif;
+      color:var(--text);
+    }
+
+    .hidden{ display:none !important; }
+
+    .sticky-header{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background:var(--bg);
+      border-bottom:1px solid var(--border);
+      padding:1rem;
+    }
+
+    .page-title{
+      margin:0;
+      font-size:1.25rem;
+      font-weight:700;
+      color:#111827;
+    }
+
+    .page-sub{
+      margin:0;
+      font-size:0.95rem;
+      color:var(--sub);
+    }
+
+    .card-soft{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .btn-primary-app{
+      background:var(--primary);
+      border:none;
+      color:#fff;
+    }
+    .btn-primary-app:hover{
+      background:#3200c7;
+      color:#fff;
+    }
+
+    .btn-accent-app{
+      background:var(--accent);
+      border:none;
+      color:#fff;
+    }
+    .btn-accent-app:hover{
+      background:#00aacd;
+      color:#fff;
+    }
+
+    .section-title{
+      font-size:1rem;
+      font-weight:700;
+      margin-bottom:0.75rem;
+    }
+
+    .small-label{
+      font-size:0.87rem;
+      font-weight:600;
+      margin-bottom:0.35rem;
+      color:#495057;
+    }
+
+    .muted-note{
+      font-size:0.88rem;
+      color:var(--sub);
+    }
+
+    .login-wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:1rem;
+    }
+
+    .login-card{
+      width:100%;
+      max-width:520px;
+    }
+
+    .app-body{
+      padding:1rem;
+      padding-bottom:2rem;
+    }
+
+    .queue-card + .queue-card{
+      margin-top:0.8rem;
+    }
+
+    .queue-number{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      background:var(--primary);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      flex-shrink:0;
+    }
+
+    .status-badge{
+      font-size:0.78rem;
+      font-weight:700;
+      border-radius:999px;
+      padding:0.35rem 0.65rem;
+      display:inline-block;
+    }
+
+    .status-requested{
+      background:#e7f0ff;
+      color:#0d6efd;
+    }
+
+    .status-played{
+      background:#e8f7ee;
+      color:var(--success);
+    }
+
+    .status-cancelled{
+      background:#fdebed;
+      color:var(--danger);
+    }
+
+    .empty-state{
+      border:1px dashed #cfd6dd;
+      border-radius:12px;
+      background:#fff;
+      color:var(--sub);
+      text-align:center;
+      padding:1rem;
+    }
+
+    .admin-layout{
+      display:grid;
+      grid-template-columns:1.1fr 1fr;
+      gap:1rem;
+    }
+
+    @media (max-width:992px){
+      .admin-layout{ grid-template-columns:1fr; }
+    }
+
+    .stats-strip{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:0.75rem;
+      margin-bottom:1rem;
+    }
+
+    @media (max-width:768px){
+      .stats-strip{ grid-template-columns:repeat(2, 1fr); }
+    }
+
+    .stat-box{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:0.8rem;
+      text-align:center;
+    }
+
+    .stat-value{
+      font-size:1.15rem;
+      font-weight:700;
+    }
+
+    .youtube-link{
+      word-break:break-word;
+    }
+
+    .history-card{
+      opacity:0.98;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginDiv" class="login-wrap">
+    <div class="card-soft p-4 login-card">
+      <div class="text-center mb-3">
+        <p class="page-title">🎤 KPMG K1 Karaoke Queue</p>
+        <p class="page-sub">Enter your email to continue</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="input-group mb-2">
+          <input type="email" id="emailInput" class="form-control" placeholder="Your email" required />
+          <button type="submit" id="loginBtn" class="btn btn-primary-app">Enter</button>
+        </div>
+      </form>
+
+      <div id="loginMessage" class="small mt-2 text-danger"></div>
+    </div>
+  </div>
+
+  <!-- USER VIEW -->
+  <div id="userDiv" class="hidden">
+    <div class="sticky-header">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <small class="text-secondary">Logged in as: <span id="userEmailUser"></span></small>
+        <button id="logoutBtnUser" class="btn btn-outline-secondary btn-sm">Logout</button>
+      </div>
+      <div>
+        <p class="page-title">KPMG K1 Karaoke Queue</p>
+        <p class="page-sub">Request a song and view the queue</p>
+      </div>
+    </div>
+
+    <div class="container-fluid app-body">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="card-soft p-3">
+            <div class="section-title">Request a song</div>
+
+            <form id="songRequestForm">
+              <div class="mb-3">
+                <label class="small-label">Song name <span class="text-danger">*</span></label>
+                <input type="text" id="songNameInput" class="form-control" placeholder="Enter song name" required />
+              </div>
+
+              <div class="mb-3">
+                <label class="small-label">YouTube link (optional)</label>
+                <input type="url" id="youtubeLinkInput" class="form-control" placeholder="Paste link if available" />
+              </div>
+
+              <div class="mb-2 d-flex justify-content-between align-items-center">
+                <label class="small-label mb-0">Singer name(s)</label>
+                <small class="text-secondary">Microphones available: <span id="userMicCount">2</span></small>
+              </div>
+
+              <div id="singerFieldsUser"></div>
+
+              <div class="muted-note mt-2 mb-3">
+                If no singer name is entered, the microphone is open for anyone to join.
+              </div>
+
+              <button type="submit" class="btn btn-primary-app w-100">Add to Queue</button>
+            </form>
+
+            <div id="requestMessage" class="small mt-3"></div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="card-soft p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="section-title mb-0">Current queue</div>
+              <span class="muted-note">Live</span>
+            </div>
+            <div class="muted-note mb-3">Songs with status "Requested" appear here in order.</div>
+            <div id="userRequestedQueue"></div>
+          </div>
+
+          <div class="card-soft p-3">
+            <div class="section-title">Played / Cancelled</div>
+            <div id="userHistoryQueue"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN VIEW -->
+  <div id="adminDiv" class="hidden">
+    <div class="sticky-header">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <small class="text-secondary">Logged in as: <span id="userEmailAdmin"></span></small>
+        <button id="logoutBtnAdmin" class="btn btn-outline-secondary btn-sm">Logout</button>
+      </div>
+      <div>
+        <p class="page-title">KPMG K1 Karaoke Queue</p>
+        <p class="page-sub">Manage requests</p>
+      </div>
+    </div>
+
+    <div class="container-fluid app-body">
+      <div class="stats-strip">
+        <div class="stat-box">
+          <div class="text-secondary small">Total Requests</div>
+          <div id="statTotal" class="stat-value">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="text-secondary small">Requested</div>
+          <div id="statRequested" class="stat-value">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="text-secondary small">Played</div>
+          <div id="statPlayed" class="stat-value">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="text-secondary small">Cancelled</div>
+          <div id="statCancelled" class="stat-value">0</div>
+        </div>
+      </div>
+
+      <div class="admin-layout">
+        <div>
+          <div class="card-soft p-3 mb-3">
+            <div class="section-title">Microphone setting</div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <button id="decreaseMicBtn" type="button" class="btn btn-outline-secondary btn-sm">- Decrease</button>
+              <div class="btn btn-light btn-sm disabled">Current: <span id="adminMicCount">2</span></div>
+              <button id="increaseMicBtn" type="button" class="btn btn-accent-app btn-sm">+ Add microphone</button>
+            </div>
+            <div class="muted-note mt-2">
+              Participants will automatically see more singer fields when the microphone count is increased.
+            </div>
+          </div>
+
+          <div class="card-soft p-3">
+            <div class="section-title">Requested queue</div>
+            <div id="adminRequestedQueue"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-soft p-3">
+            <div class="section-title">Played / Cancelled</div>
+            <div id="adminHistoryQueue"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      addDoc,
+      updateDoc,
+      getDoc,
+      getDocs,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxlQWFYRcbGZ133HPEMXYy8tR_KMUiJw0",
+      authDomain: "lottogame-16083.firebaseapp.com",
+      projectId: "lottogame-16083",
+      storageBucket: "lottogame-16083.appspot.com",
+      messagingSenderId: "278778623701",
+      appId: "1:278778623701:web:c7828b036c617a13fa145c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ADMIN_EMAIL = "gameadmin@kpmg.co.th";
+
+    const usersCol = collection(db, "users");
+    const queueCol = collection(db, "karaoke_queue");
+    const settingsRef = doc(db, "settings", "karaoke");
+
+    let currentEmail = "";
+    let isAdmin = false;
+    let micCount = 2;
+    let queueItems = [];
+    let allowedUsers = [];
+    let unsubSettings = null;
+    let unsubQueue = null;
+
+    const loginDiv = document.getElementById("loginDiv");
+    const userDiv = document.getElementById("userDiv");
+    const adminDiv = document.getElementById("adminDiv");
+
+    const loginForm = document.getElementById("loginForm");
+    const emailInput = document.getElementById("emailInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMessage = document.getElementById("loginMessage");
+
+    const userEmailUser = document.getElementById("userEmailUser");
+    const userEmailAdmin = document.getElementById("userEmailAdmin");
+    const logoutBtnUser = document.getElementById("logoutBtnUser");
+    const logoutBtnAdmin = document.getElementById("logoutBtnAdmin");
+
+    const songRequestForm = document.getElementById("songRequestForm");
+    const songNameInput = document.getElementById("songNameInput");
+    const youtubeLinkInput = document.getElementById("youtubeLinkInput");
+    const singerFieldsUser = document.getElementById("singerFieldsUser");
+    const requestMessage = document.getElementById("requestMessage");
+
+    const userMicCount = document.getElementById("userMicCount");
+    const adminMicCount = document.getElementById("adminMicCount");
+    const increaseMicBtn = document.getElementById("increaseMicBtn");
+    const decreaseMicBtn = document.getElementById("decreaseMicBtn");
+
+    const userRequestedQueue = document.getElementById("userRequestedQueue");
+    const userHistoryQueue = document.getElementById("userHistoryQueue");
+    const adminRequestedQueue = document.getElementById("adminRequestedQueue");
+    const adminHistoryQueue = document.getElementById("adminHistoryQueue");
+
+    const statTotal = document.getElementById("statTotal");
+    const statRequested = document.getElementById("statRequested");
+    const statPlayed = document.getElementById("statPlayed");
+    const statCancelled = document.getElementById("statCancelled");
+
+    function normalizeEmail(value) {
+      return (value || "").trim().toLowerCase();
+    }
+
+    function showOnly(target) {
+      loginDiv.classList.add("hidden");
+      userDiv.classList.add("hidden");
+      adminDiv.classList.add("hidden");
+      target.classList.remove("hidden");
+    }
+
+    function showText(element, message, type) {
+      element.className = "small mt-2 text-" + type;
+      element.textContent = message;
+    }
+
+    function clearText(element) {
+      element.textContent = "";
+      element.className = "small mt-2";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+
+    function isValidUrl(value) {
+      if (!value) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function getStatusBadge(status) {
+      const s = (status || "requested").toLowerCase();
+      if (s === "played") {
+        return '<span class="status-badge status-played">Played</span>';
+      }
+      if (s === "cancelled") {
+        return '<span class="status-badge status-cancelled">Cancelled</span>';
+      }
+      return '<span class="status-badge status-requested">Requested</span>';
+    }
+
+    function getSingerText(singers) {
+      const clean = (singers || []).map(function(x){
+        return (x || "").trim();
+      }).filter(Boolean);
+
+      if (!clean.length) {
+        return '<span class="text-secondary">Open mic / anyone can join</span>';
+      }
+
+      return clean.map(function(name){
+        return escapeHtml(name);
+      }).join(", ");
+    }
+
+    function renderSingerFields(count) {
+      userMicCount.textContent = String(count);
+      adminMicCount.textContent = String(count);
+
+      singerFieldsUser.innerHTML = "";
+
+      for (let i = 1; i <= count; i++) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "mb-2";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "form-control singer-input";
+        input.placeholder = "Singer " + i + " name (optional)";
+
+        wrapper.appendChild(input);
+        singerFieldsUser.appendChild(wrapper);
+      }
+    }
+
+    function sortQueue(items) {
+      return items.slice().sort(function(a, b){
+        return Number(a.submittedAtMs || 0) - Number(b.submittedAtMs || 0);
+      });
+    }
+
+    function getRequestedItems() {
+      return sortQueue(queueItems.filter(function(item){
+        return (item.status || "requested") === "requested";
+      }));
+    }
+
+    function getHistoryItems() {
+      return sortQueue(queueItems.filter(function(item){
+        return (item.status || "requested") !== "requested";
+      }));
+    }
+
+    function updateStats() {
+      const total = queueItems.length;
+      const requested = queueItems.filter(function(x){ return (x.status || "requested") === "requested"; }).length;
+      const played = queueItems.filter(function(x){ return x.status === "played"; }).length;
+      const cancelled = queueItems.filter(function(x){ return x.status === "cancelled"; }).length;
+
+      statTotal.textContent = String(total);
+      statRequested.textContent = String(requested);
+      statPlayed.textContent = String(played);
+      statCancelled.textContent = String(cancelled);
+    }
+
+    function buildCardHtml(item, sequence, adminMode) {
+      const singersHtml = getSingerText(item.singers || []);
+      const badgeHtml = getStatusBadge(item.status);
+      const queueLabel = sequence ? String(sequence) : "•";
+      const queueStyle = sequence ? "" : "background:#95a1ad;";
+      const titleHtml = escapeHtml(item.songName || "-");
+
+      let youtubeHtml = "";
+      if (item.youtubeLink) {
+        const safeLink = escapeHtml(item.youtubeLink);
+        youtubeHtml = '<div class="mt-2"><small class="text-secondary">YouTube:</small><br><a class="youtube-link" href="' + safeLink + '" target="_blank" rel="noopener noreferrer">' + safeLink + '</a></div>';
+      }
+
+      let requestedByHtml = "";
+      if (item.requestedBy) {
+        requestedByHtml = '<div class="mt-2"><small class="text-secondary">Requested by:</small> ' + escapeHtml(item.requestedBy) + '</div>';
+      }
+
+      let controlsHtml = "";
+      if (adminMode) {
+        controlsHtml =
+          '<div class="d-flex flex-wrap gap-2 mt-3">' +
+            '<button class="btn btn-sm btn-outline-primary status-btn" data-id="' + escapeHtml(item.id) + '" data-status="requested">Requested</button>' +
+            '<button class="btn btn-sm btn-outline-success status-btn" data-id="' + escapeHtml(item.id) + '" data-status="played">Played</button>' +
+            '<button class="btn btn-sm btn-outline-danger status-btn" data-id="' + escapeHtml(item.id) + '" data-status="cancelled">Cancelled</button>' +
+          '</div>';
+      }
+
+      return '' +
+        '<div class="card-soft p-3 queue-card ' + (((item.status || "requested") !== "requested") ? 'history-card' : '') + '">' +
+          '<div class="d-flex gap-3">' +
+            '<div class="queue-number" style="' + queueStyle + '">' + queueLabel + '</div>' +
+            '<div class="flex-grow-1">' +
+              '<div class="d-flex justify-content-between align-items-start gap-2">' +
+                '<div>' +
+                  '<div class="fw-bold">' + titleHtml + '</div>' +
+                  '<div class="muted-note mt-1">Singer(s): ' + singersHtml + '</div>' +
+                '</div>' +
+                '<div>' + badgeHtml + '</div>' +
+              '</div>' +
+              youtubeHtml +
+              requestedByHtml +
+              controlsHtml +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function bindAdminButtons() {
+      if (!isAdmin) return;
+
+      const buttons = document.querySelectorAll(".status-btn");
+      buttons.forEach(function(btn){
+        btn.onclick = async function() {
+          const id = btn.getAttribute("data-id");
+          const status = btn.getAttribute("data-status");
+
+          try {
+            await updateDoc(doc(db, "karaoke_queue", id), {
+              status: status,
+              statusUpdatedAt: serverTimestamp(),
+              statusUpdatedBy: currentEmail
+            });
+          } catch (error) {
+            console.error(error);
+            alert("Unable to update status.");
+          }
+        };
+      });
+    }
+
+    function renderQueues() {
+      const requested = getRequestedItems();
+      const history = getHistoryItems();
+
+      if (requested.length) {
+        userRequestedQueue.innerHTML = requested.map(function(item, index){
+          return buildCardHtml(item, index + 1, false);
+        }).join("");
+      } else {
+        userRequestedQueue.innerHTML = '<div class="empty-state">No song requests yet.</div>';
+      }
+
+      if (history.length) {
+        userHistoryQueue.innerHTML = history.map(function(item){
+          return buildCardHtml(item, null, false);
+        }).join("");
+      } else {
+        userHistoryQueue.innerHTML = '<div class="empty-state">No played or cancelled songs yet.</div>';
+      }
+
+      if (requested.length) {
+        adminRequestedQueue.innerHTML = requested.map(function(item, index){
+          return buildCardHtml(item, index + 1, true);
+        }).join("");
+      } else {
+        adminRequestedQueue.innerHTML = '<div class="empty-state">No active requests.</div>';
+      }
+
+      if (history.length) {
+        adminHistoryQueue.innerHTML = history.map(function(item){
+          return buildCardHtml(item, null, true);
+        }).join("");
+      } else {
+        adminHistoryQueue.innerHTML = '<div class="empty-state">No played or cancelled songs yet.</div>';
+      }
+
+      updateStats();
+      bindAdminButtons();
+    }
+
+    async function loadAllowedUsers() {
+      try {
+        const snap = await getDocs(usersCol);
+        allowedUsers = snap.docs.map(function(d){
+          return d.id.toLowerCase();
+        });
+        return true;
+      } catch (error) {
+        console.error("Unable to load users:", error);
+        allowedUsers = [];
+        return false;
+      }
+    }
+
+    async function canLogin(email) {
+      const v = normalizeEmail(email);
+
+      if (v === ADMIN_EMAIL) {
+        return { ok: true, admin: true, message: "" };
+      }
+
+      const loaded = await loadAllowedUsers();
+
+      if (!loaded) {
+        return {
+          ok: false,
+          admin: false,
+          message: "Unable to verify access right now. Please try again."
+        };
+      }
+
+      if (!allowedUsers.includes(v)) {
+        return {
+          ok: false,
+          admin: false,
+          message: "This email is not permitted."
+        };
+      }
+
+      return { ok: true, admin: false, message: "" };
+    }
+
+    async function ensureSettings() {
+      try {
+        const snap = await getDoc(settingsRef);
+        if (!snap.exists()) {
+          await setDoc(settingsRef, {
+            micCount: 2,
+            updatedAt: serverTimestamp(),
+            updatedBy: "system"
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error("Unable to prepare settings:", error);
+      }
+    }
+
+    function stopListeners() {
+      if (typeof unsubSettings === "function") {
+        unsubSettings();
+        unsubSettings = null;
+      }
+      if (typeof unsubQueue === "function") {
+        unsubQueue();
+        unsubQueue = null;
+      }
+    }
+
+    function startListeners() {
+      stopListeners();
+
+      unsubSettings = onSnapshot(settingsRef, async function(snap){
+        if (!snap.exists()) {
+          await ensureSettings();
+          return;
+        }
+
+        const data = snap.data() || {};
+        micCount = Math.max(2, Number(data.micCount || 2));
+        renderSingerFields(micCount);
+      }, function(error){
+        console.error("Settings listener error:", error);
+      });
+
+      unsubQueue = onSnapshot(queueCol, function(snap){
+        queueItems = snap.docs.map(function(d){
+          return {
+            id: d.id,
+            ...d.data()
+          };
+        });
+        renderQueues();
+      }, function(error){
+        console.error("Queue listener error:", error);
+      });
+    }
+
+    function logout() {
+      stopListeners();
+      currentEmail = "";
+      isAdmin = false;
+      queueItems = [];
+      emailInput.value = "";
+      songNameInput.value = "";
+      youtubeLinkInput.value = "";
+      renderSingerFields(2);
+      clearText(loginMessage);
+      clearText(requestMessage);
+      showOnly(loginDiv);
+    }
+
+    async function handleLogin() {
+      const email = normalizeEmail(emailInput.value);
+
+      if (!email) {
+        showText(loginMessage, "Please enter your email.", "danger");
+        return;
+      }
+
+      loginBtn.disabled = true;
+      showText(loginMessage, "Checking access...", "secondary");
+
+      try {
+        const result = await canLogin(email);
+
+        if (!result.ok) {
+          showText(loginMessage, result.message || "Unable to continue.", "danger");
+          loginBtn.disabled = false;
+          return;
+        }
+
+        currentEmail = email;
+        isAdmin = result.admin;
+
+        userEmailUser.textContent = email;
+        userEmailAdmin.textContent = email;
+
+        await ensureSettings();
+        startListeners();
+        clearText(loginMessage);
+
+        if (isAdmin) {
+          showOnly(adminDiv);
+        } else {
+          showOnly(userDiv);
+        }
+      } catch (error) {
+        console.error(error);
+        showText(loginMessage, "Something went wrong. Please try again.", "danger");
+      } finally {
+        loginBtn.disabled = false;
+      }
+    }
+
+    loginForm.addEventListener("submit", async function(event){
+      event.preventDefault();
+      await handleLogin();
+    });
+
+    logoutBtnUser.onclick = logout;
+    logoutBtnAdmin.onclick = logout;
+
+    songRequestForm.addEventListener("submit", async function(event){
+      event.preventDefault();
+
+      const songName = (songNameInput.value || "").trim();
+      const youtubeLink = (youtubeLinkInput.value || "").trim();
+
+      if (!songName) {
+        showText(requestMessage, "Song name is required.", "danger");
+        return;
+      }
+
+      if (youtubeLink && !isValidUrl(youtubeLink)) {
+        showText(requestMessage, "Please enter a valid link.", "danger");
+        return;
+      }
+
+      const singers = Array.from(document.querySelectorAll(".singer-input"))
+        .map(function(input){
+          return (input.value || "").trim();
+        })
+        .filter(Boolean);
+
+      try {
+        await addDoc(queueCol, {
+          songName: songName,
+          youtubeLink: youtubeLink || "",
+          singers: singers,
+          requestedBy: currentEmail,
+          status: "requested",
+          submittedAtMs: Date.now(),
+          createdAt: serverTimestamp(),
+          statusUpdatedAt: null,
+          statusUpdatedBy: null
+        });
+
+        songRequestForm.reset();
+        renderSingerFields(micCount);
+        showText(requestMessage, "Song added to the queue.", "success");
+      } catch (error) {
+        console.error(error);
+        showText(requestMessage, "Unable to add the song. Please try again.", "danger");
+      }
+    });
+
+    increaseMicBtn.onclick = async function() {
+      if (!isAdmin) return;
+
+      try {
+        await setDoc(settingsRef, {
+          micCount: Math.max(2, micCount + 1),
+          updatedAt: serverTimestamp(),
+          updatedBy: currentEmail
+        }, { merge: true });
+      } catch (error) {
+        console.error(error);
+        alert("Unable to update microphone count.");
+      }
+    };
+
+    decreaseMicBtn.onclick = async function() {
+      if (!isAdmin) return;
+
+      try {
+        await setDoc(settingsRef, {
+          micCount: Math.max(2, micCount - 1),
+          updatedAt: serverTimestamp(),
+          updatedBy: currentEmail
+        }, { merge: true });
+      } catch (error) {
+        console.error(error);
+        alert("Unable to update microphone count.");
+      }
+    };
+
+    renderSingerFields(2);
+  </script>
+</body>
+</html>
+``
